@@ -1,0 +1,203 @@
+/* Allgemeiner Seitenstil */
+* {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #0d1317;
+    color: #b0c7d1;
+    line-height: 1.6;
+    margin: 20px auto;
+    width: calc(100% - 20px);
+}
+
+/* Styling für den Seitenkopf */
+header {
+    padding: 10px;
+    background-color: #2a3b4726;
+    border-radius: 8px; /* Abrundung der Ecken */
+}
+
+header h1 {
+    font-size: 2em;
+    background: linear-gradient(to right, #1feeee, #17ff9a);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+header>*:hover {
+    text-decoration: none;
+}
+
+/*
+.headnav a {
+    display:inline-block;
+    background-color: #002b36;
+    color: #66ffcc;
+    padding: 8px 8px;
+    border-radius: 8px;
+    margin: 5px 10px;
+}
+
+.headnav a:hover {
+    color: #99e6d1;
+    background-color: #1c262e;
+    transform: scale(1.2);
+    text-decoration: none;
+}
+*/
+
+/* Überschriften */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+    background: linear-gradient(to right, #1feeee, #17ff9a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+h1 { font-size: 3em; }
+h2 { font-size: 2.5em; }
+h3 { font-size: 2em; }
+h4 { font-size: 1.75em; }
+h5 { font-size: 1.5em; }
+h6 { font-size: 1.2em; }
+
+/* Links */
+a {
+    color: #66ffcc; /* Leuchtendes Türkis für Links */
+    text-decoration: none;
+}
+
+a:hover {
+    color: #99e6d1; /* Helleres Türkis bei Hover */
+    text-decoration: underline;
+}
+
+/* Listen */
+ul, ol {
+    padding-left: 20px;
+}
+
+li {
+    margin-bottom: 10px;
+}
+
+/* Zitate */
+blockquote {
+    color: #99e6d1;
+    font-style: italic;
+    border-left: 4px solid #33cccc;
+    padding-left: 15px;
+    margin: 20px 0;
+    background-color: #1c262e;
+}
+
+/* Tabellen */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 20px;
+    border-radius: 6px; /* Abrundung für gesamte Tabelle */
+    overflow: hidden; /* Für abgerundete Kanten */
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #66ffcc;
+    text-align: left;
+}
+
+td:first-child, th:first-child {
+    border-radius: 8px 0 0 8px; /* Linke obere und untere Ecke abrunden */
+}
+
+td:last-child, th:last-child {
+    border-radius: 0 8px 8px 0; /* Rechte obere und untere Ecke abrunden */
+}
+
+th {
+    background-color: #2a3d45; /* Dunkler Hintergrund für Tabellenüberschriften */
+    color: #b2f0e5; /* Heller Text */
+}
+
+/* Formularelemente */
+input, textarea, select, button {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #66ffcc;
+    border-radius: 6px;
+    background-color: #1a1a1a;
+    color: #b2f0e5;
+}
+
+button {
+    background-color: #33cccc;
+    color: #1a1a1a;
+    cursor: pointer;
+    border-radius: 6px; /* Abrundung für Buttons */
+}
+
+button:hover , input[type="button"]:hover{
+    background-color: #66ffcc;
+    color: #1a1a1a;
+}
+
+/* Stil für Checkbox */
+input[type="checkbox"] {
+    appearance: none; /* Entfernt das Standard-Checkbox-Design */
+    width: 20px;
+    height: 20px;
+    border: 1px solid #66ffcc; /* Türkisfarbener Rand */
+    border-radius: 6px; /* Leichte Abrundung */
+    background-color: #1a1a1a; /* Dunkler Hintergrund */
+    cursor: pointer;
+    transition: all 0.3s ease; /* Weiche Übergänge */
+}
+
+input[type="checkbox"]:checked {
+    background-color: #33cccc; /* Türkisfarbener Hintergrund bei Aktivierung */
+    border-color: #99e6d1; /* Hellerer Rand bei Aktivierung */
+    position: relative;
+}
+
+input[type="checkbox"]:checked::after {
+    content: "✔"; /* Häkchen-Symbol */
+    color: #1a1a1a; /* Dunkle Farbe für das Häkchen */
+    font-size: 16px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+input[type="checkbox"]:hover {
+    border-color: #99e6d1; /* Hellerer Rand bei Hover */
+    transform: scale(1.1); /* Leichte Vergrößerung bei Hover */
+}
+
+/* Code */
+pre, code {
+    background-color: #002b36;
+    color: #b2f0e5;
+    padding: 10px;
+    border-radius: 8px; /* Abrundung für Code-Blöcke */
+    font-family: monospace;
+}
+
+pre {
+    padding: 10px;
+    overflow-x: auto;
+}
+
+/* Fußzeile */
+footer {
+    text-align: center;
+    padding: 10px;
+    color: #99e6d1;
+    font-size: 0.9em;
+}
