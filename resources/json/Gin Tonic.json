@@ -1,0 +1,31 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Gin Tonic",
+    "cocktail_description": "",
+    "ingredients": [
+        {
+            "ingredient_name": "Gin",
+            "amount": 5,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "TonicWater",
+            "amount": 15,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Gurkenscheiben",
+            "amount": 5,
+            "unit": "Stück",
+            "optional": true
+        }
+    ],
+    "steps": [
+        {
+            "step_number": 1,
+            "instruction": "Alles ins Glas gießen"
+        }
+    ]
+}

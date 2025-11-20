@@ -1,0 +1,26 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Irish Coffe",
+    "cocktail_description": "",
+    "ingredients": [
+        {
+            "ingredient_name": "Whiskey",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Kaffee",
+            "amount": 1,
+            "unit": "Tasse",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Rohrzucker",
+            "amount": 1,
+            "unit": "-2TL",
+            "optional": false
+        }
+    ],
+    "steps": []
+}

@@ -1,11 +1,9 @@
 'use client'
 import React, { useEffect, useState } from "react";
-import "./AllCocktailsStyle.css";
+import "./landingpage.css";
 
 type CocktailRow = {
     Cocktail_ID?: number;
-    cocktail_id?: number;
-    id?: number;
     Name?: string;
     Description?: string;
     [key: string]: any;
@@ -24,7 +22,6 @@ type Selected = {
 export default function AllCocktails() {
     const [cocktails, setCocktails] = useState<CocktailRow[] | null>(null);
     const [error, setError] = useState<string | null>(null);
-    // navigation target: open recipe.html with cocktailID as query param
 
     useEffect(() => { loadCocktails(); }, []);
 
@@ -50,7 +47,7 @@ export default function AllCocktails() {
     }
 
     return (
-        <div>
+        <div className="displayArea">
             {error && <div style={{ color: 'red' }}>Error: {error}</div>}
 
             {Array.isArray(cocktails) && cocktails.length === 0 && <div>No records found.</div>}
@@ -58,7 +55,7 @@ export default function AllCocktails() {
             {Array.isArray(cocktails) && cocktails.length > 0 && (
                 <div id="cocktailList">
                     {cocktails.map((element, idx) => {
-                        const cocktailID = element.Cocktail_ID ?? element.cocktail_id ?? element.id ?? (idx + 1);
+                        const cocktailID = element.Cocktail_ID ?? (idx + 1);
                         return (
                             <div
                                 className="cocktailPreview"
@@ -75,8 +72,6 @@ export default function AllCocktails() {
                     
                 </div>
             )}
-
-            {/* details are shown on recipe.html; navigation opens recipe.html with cocktailID param */}
         </div>
     );
 }

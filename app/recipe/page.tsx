@@ -82,42 +82,47 @@ export default function CocktailDetail() {
     if (id == null) return null;
 
     return (
-        <div className="details">
-            {loading && <div>Loading details…</div>}
-            {error && <div style={{ color: "red" }}>Error: {error}</div>}
-            {selected && (
-                <>
-                    <h2>{selected.name}</h2>
-                    <p>{selected.description}</p>
+        <div>
+            <header>
+            <a href="/"><h1>Cocktails</h1></a>
+            </header>
+            <div className="details">
+                {loading && <div>Loading details…</div>}
+                {error && <div style={{ color: "red" }}>Error: {error}</div>}
+                {selected && (
+                    <>
+                        <h2>{selected.name}</h2>
+                        <p>{selected.description}</p>
 
-                    <h3>Zutaten</h3>
+                        <h3>Zutaten</h3>
 
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Menge</th>
-                                <th>Zutat</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {selected.ingredients.map((i) => (
-                                <tr key={i.id}>
-                                    <td>{i.amount} {i.unit}</td>
-                                    <td>{i.name}</td>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Menge</th>
+                                    <th>Zutat</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
 
-                    <h3>Zubereitung</h3>
-                    <ul>
-                        {selected.steps.map((s) => (
-                            <li key={s.id}>{s.number}. {s.description}</li>
-                        ))}
-                    </ul>
-                </>
-            )}
+                            <tbody>
+                                {selected.ingredients.map((i) => (
+                                    <tr key={i.id}>
+                                        <td>{i.amount} {i.unit}</td>
+                                        <td>{i.name}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        <h3>Zubereitung</h3>
+                        <ul>
+                            {selected.steps.map((s) => (
+                                <li key={s.id}>{s.number}. {s.description}</li>
+                            ))}
+                        </ul>
+                    </>
+                )}
+            </div>
         </div>
     );
 }

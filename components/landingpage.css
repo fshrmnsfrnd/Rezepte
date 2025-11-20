@@ -1,0 +1,31 @@
+.cocktailPreview{
+    padding: 10px;
+    border: 1px solid #66ffcc;
+    text-align: left;
+    border-radius: 8px;
+    margin: 5px;
+}
+
+li{
+    list-style-type: none;
+}
+
+@media (orientation: landscape) {
+    .displayArea{
+        float: left;
+        width: calc(50%);
+        min-height: 100%;
+        overflow-y: scroll;
+        
+    }
+
+    .ingredientArea{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    button{
+        clear:both;
+    }
+}

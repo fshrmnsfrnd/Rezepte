@@ -1,0 +1,41 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Blue Lagoon",
+    "cocktail_description": "",
+    "ingredients": [
+        {
+            "ingredient_name": "Wodka",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "BlueCuracao",
+            "amount": 2,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Zitronensaft",
+            "amount": 1,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Zitronenlimo",
+            "amount": null,
+            "unit": "etwas",
+            "optional": true
+        }
+    ],
+    "steps": [
+        {
+            "step_number": 1,
+            "instruction": "Alles außer Limo in ein Glas"
+        },
+        {
+            "step_number": 2,
+            "instruction": "Dann mit Limo auffüllen"
+        }
+    ]
+}

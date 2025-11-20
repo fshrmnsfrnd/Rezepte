@@ -1,0 +1,41 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Cuba Libre",
+    "cocktail_description": "",
+    "ingredients": [
+        {
+            "ingredient_name": "Rum",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Rohrzucker",
+            "amount": 1,
+            "unit": "TL",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Cola",
+            "amount": null,
+            "unit": "etwas",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Limettensaft",
+            "amount": 2,
+            "unit": "cl",
+            "optional": true
+        }
+    ],
+    "steps": [
+        {
+            "step_number": 1,
+            "instruction": "Alles in ein Glas"
+        },
+        {
+            "step_number": 2,
+            "instruction": "Umrühren"
+        }
+    ]
+}

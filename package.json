@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently --kill-others \"npm:watch:resources\" \"npm:watch:json-import\" \"next dev\"",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "watch:resources": "node tools/watchMarkdown.js",
+    "watch:json-import": "node tools/watch-json-importer.js"
   },
   "dependencies": {
     "next": "16.0.3",
@@ -23,6 +25,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "concurrently": "^8.2.0"
   }
 }

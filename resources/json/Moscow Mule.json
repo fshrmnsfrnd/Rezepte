@@ -1,0 +1,55 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Moscow Mule",
+    "cocktail_description": "",
+    "ingredients": [
+        {
+            "ingredient_name": "Wodka",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Limettensaft",
+            "amount": 2,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "GingerBeer",
+            "amount": 200,
+            "unit": "ml",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Gurke",
+            "amount": 5,
+            "unit": "Scheiben",
+            "optional": true
+        },
+        {
+            "ingredient_name": "Minze",
+            "amount": 1,
+            "unit": "Zweig",
+            "optional": true
+        }
+    ],
+    "steps": [
+        {
+            "step_number": 1,
+            "instruction": "3 Gurkenscheiben im Shaker zerstoßen"
+        },
+        {
+            "step_number": 2,
+            "instruction": "Wodka und Limettensaft dazugeben"
+        },
+        {
+            "step_number": 3,
+            "instruction": "shaken"
+        },
+        {
+            "step_number": 4,
+            "instruction": "In ein Glas und mit Gingerbeer auffüllen"
+        }
+    ]
+}
