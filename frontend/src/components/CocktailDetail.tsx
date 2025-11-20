@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 
-type Ingredient = { id: number; name: string };
+type Ingredient = {
+    id: number;
+    amount: number;
+    unit: string;
+    name: string;
+};
 type Step = { id: number; number?: number; description?: string };
 type Selected = {
     name: string;
@@ -43,7 +48,9 @@ export default function CocktailDetail({ id }: { id: number | null }) {
 
                 const ingredients: Ingredient[] = (data.ingredients || []).map((ing: any, idx: number) => ({
                     id: idx,
-                    name: `${ing.ingredient_name}${ing.amount != null ? ` — ${ing.amount}${ing.unit ? ' ' + ing.unit : ''}` : ''}`
+                    amount: ing.amount,
+                    unit: ing.unit,
+                    name: ing.ingredient_name
                 }));
 
                 const steps: Step[] = (data.steps || []).map((s: any, idx: number) => ({
@@ -76,19 +83,32 @@ export default function CocktailDetail({ id }: { id: number | null }) {
                     <h2>{selected.name}</h2>
                     <p>{selected.description}</p>
 
-                    <h3>Ingredients</h3>
-                    <ul>
-                        {selected.ingredients.map((i) => (
-                            <li key={i.id}>{i.name}</li>
-                        ))}
-                    </ul>
+                    <h3>Zutaten</h3>
 
-                    <h3>Steps</h3>
-                    <ol>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Menge</th>
+                                <th>Zutat</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {selected.ingredients.map((i) => (
+                                <tr key={i.id}>
+                                    <td>{i.amount} {i.unit}</td>
+                                    <td>{i.name}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+
+                    <h3>Zubereitung</h3>
+                    <ul>
                         {selected.steps.map((s) => (
                             <li key={s.id}>{s.number}. {s.description}</li>
                         ))}
-                    </ol>
+                    </ul>
                 </>
             )}
         </div>
