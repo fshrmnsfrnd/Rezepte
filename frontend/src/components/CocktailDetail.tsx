@@ -33,25 +33,24 @@ export default function CocktailDetail({ id }: { id: number | null }) {
 
                 if (cancelled) return;
 
-                if (!Array.isArray(data) || data.length === 0) {
+                if (!data || !data.cocktail_id) {
                     setSelected({ name: "Not Found", description: "", ingredients: [], steps: [] });
                     return;
                 }
 
-                const first = data[0];
-                const name: string = first.cocktail_name ?? first.Name ?? "";
-                const description: string = first.cocktail_description ?? first.Description ?? "";
+                const name: string = data.cocktail_name ?? data.Name ?? "";
+                const description: string = data.cocktail_description ?? data.Description ?? "";
 
-                const ingredientsMap = new Map<number | string, Ingredient>();
-                const stepsMap = new Map<number | string, Step>();
+                const ingredients: Ingredient[] = (data.ingredients || []).map((ing: any, idx: number) => ({
+                    id: idx,
+                    name: `${ing.ingredient_name}${ing.amount != null ? ` — ${ing.amount}${ing.unit ? ' ' + ing.unit : ''}` : ''}`
+                }));
 
-                data.forEach((r: any) => {
-                    if (r.ingredient_id && r.ingredient_name) ingredientsMap.set(r.ingredient_id, { id: r.ingredient_id, name: r.ingredient_name });
-                    if (r.step_id) stepsMap.set(r.step_id, { id: r.step_id, number: r.step_number, description: r.step_description });
-                });
-
-                const ingredients: Ingredient[] = Array.from(ingredientsMap.values());
-                const steps: Step[] = Array.from(stepsMap.values()).sort((a, b) => (a.number || 0) - (b.number || 0));
+                const steps: Step[] = (data.steps || []).map((s: any, idx: number) => ({
+                    id: idx,
+                    number: s.step_number,
+                    description: s.instruction
+                }));
 
                 setSelected({ name, description, ingredients, steps });
             } catch (err) {
