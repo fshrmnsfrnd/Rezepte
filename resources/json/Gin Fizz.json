@@ -1,0 +1,41 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Gin Fizz",
+    "cocktail_description": "Ein erfrischender Gin Cocktail",
+    "ingredients": [
+        {
+            "ingredient_name": "Gin",
+            "amount": 5,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Zitronensaft",
+            "amount": 3,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Zuckersirup",
+            "amount": 2,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Mineralwasser",
+            "amount": null,
+            "unit": "etwas",
+            "optional": false
+        }
+    ],
+    "steps": [
+        {
+            "step_number": 1,
+            "instruction": "Alles außer Wasser shaken"
+        },
+        {
+            "step_number": 2,
+            "instruction": "In ein Glass und mit Wasser auffüllen"
+        }
+    ]
+}

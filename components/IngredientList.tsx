@@ -7,10 +7,15 @@ type Ingredient = {
     Name?: string;
 };
 
-export default function IngredientList() {
+type Props = {
+    onFilterChange?: (cocktailIds: number[] | null) => void;
+};
+
+export default function IngredientList({ onFilterChange }: Props) {
     
     const [ingredients, setIngredients] = useState<Ingredient[] | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
     async function loadCocktails(): Promise<void> {
         setError(null);
@@ -35,6 +40,53 @@ export default function IngredientList() {
 
     useEffect(() => { loadCocktails(); }, []);
 
+    async function updateFilterFromSelection(newSelected: number[]) {
+        // no selection => show all
+        if (!newSelected || newSelected.length === 0) {
+            onFilterChange?.(null);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/cocktailsFilteredByIngredients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newSelected),
+            });
+
+            const ct = res.headers.get('content-type') || '';
+            let data: any;
+            if (ct.includes('application/json')) data = await res.json();
+            else data = await res.text();
+
+            if (Array.isArray(data)) {
+                const ids = data.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n));
+                onFilterChange?.(ids);
+            } else {
+                // unexpected response -> clear filter
+                onFilterChange?.(null);
+            }
+        } catch (ex) {
+            onFilterChange?.(null);
+            setError(ex instanceof Error ? ex.message : String(ex));
+        }
+    }
+
+    function toggleSelection(id: number) {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    }
+
+    // Call API whenever selectedIds changes — avoid updating parent state during render
+    useEffect(() => {
+        updateFilterFromSelection(Array.from(selectedIds.values()));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedIds]);
+
     return (
         <div className="displayArea ingredientArea">
             {error && <div style={{ color: 'red' }}>Error: {error}</div>}
@@ -45,18 +97,23 @@ export default function IngredientList() {
                 <ul className="ingredientList">
                     {ingredients.map((element, idx) => {
                         const ingredientID = element.Ingredient_ID ?? (idx + 1);
+                        const strId = `ingredient-${ingredientID}`;
                         return (
                             <li key={ingredientID}>
-                                <input type="checkbox" defaultValue={element.Ingredient_ID} id={element.Ingredient_ID?.toString()} />
-                                {element.Name ?? "Unnamed Ingredient"}
+                                <input
+                                    type="checkbox"
+                                    value={ingredientID}
+                                    id={strId}
+                                    checked={selectedIds.has(ingredientID)}
+                                    onChange={() => toggleSelection(ingredientID)}
+                                />
+                                <label htmlFor={strId}>{element.Name ?? "Unnamed Ingredient"}</label>
                             </li>
                         );
                     })}
 
                 </ul>
             )}
-
-            <button name="Search" onClick={()=>{}}>Suchen</button>
         </div>
     );
 }

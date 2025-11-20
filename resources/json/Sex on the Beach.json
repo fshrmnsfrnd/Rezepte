@@ -1,0 +1,57 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Sex on the Beach",
+    "cocktail_description": "Fruchtiger Sommer Drink",
+    "ingredients": [
+        {
+            "ingredient_name": "Wodka",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Pfirsichlikör",
+            "amount": 2,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Zitronensaft",
+            "amount": 2,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Orangensaft",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Ananassaft",
+            "amount": 2,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Grenadine",
+            "amount": 1,
+            "unit": "cl",
+            "optional": false
+        }
+    ],
+    "steps": [
+        {
+            "step_number": 1,
+            "instruction": "Grenadine und Eis in ein Glas"
+        },
+        {
+            "step_number": 2,
+            "instruction": "Alles andere shaken"
+        },
+        {
+            "step_number": 3,
+            "instruction": "Vorsichtig das Glas auffüllen"
+        }
+    ]
+}

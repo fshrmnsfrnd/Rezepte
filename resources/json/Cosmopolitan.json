@@ -1,0 +1,41 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Cosmopolitan",
+    "cocktail_description": "Klassiker mit Vodka",
+    "ingredients": [
+        {
+            "ingredient_name": "Wodka",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Cointreau",
+            "amount": 1.5,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Cranberrysaft",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Limettensaft",
+            "amount": 1,
+            "unit": "cl",
+            "optional": false
+        }
+    ],
+    "steps": [
+        {
+            "step_number": 1,
+            "instruction": "Alles im Shaker shaken"
+        },
+        {
+            "step_number": 2,
+            "instruction": "Direkt servieren"
+        }
+    ]
+}

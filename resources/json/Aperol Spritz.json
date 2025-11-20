@@ -1,0 +1,31 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Aperol Spritz",
+    "cocktail_description": "Super Sommer Italien Drink",
+    "ingredients": [
+        {
+            "ingredient_name": "Aperol",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Prosecco",
+            "amount": 6,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Mineralwasser",
+            "amount": 2,
+            "unit": "cl",
+            "optional": false
+        }
+    ],
+    "steps": [
+        {
+            "step_number": 1,
+            "instruction": "Alles in ein Glas"
+        }
+    ]
+}

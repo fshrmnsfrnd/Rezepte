@@ -19,7 +19,11 @@ type Selected = {
     steps: Step[];
 };
 
-export default function AllCocktails() {
+type Props = {
+    filterIds?: number[] | null;
+};
+
+export default function AllCocktails({ filterIds }: Props) {
     const [cocktails, setCocktails] = useState<CocktailRow[] | null>(null);
     const [error, setError] = useState<string | null>(null);
 
@@ -46,15 +50,19 @@ export default function AllCocktails() {
         }
     }
 
+    const visible = Array.isArray(cocktails)
+        ? (filterIds == null ? cocktails : cocktails.filter(c => filterIds.includes(c.Cocktail_ID as number)))
+        : null;
+
     return (
         <div className="displayArea">
             {error && <div style={{ color: 'red' }}>Error: {error}</div>}
 
-            {Array.isArray(cocktails) && cocktails.length === 0 && <div>No records found.</div>}
+            {Array.isArray(visible) && visible.length === 0 && <div>No records found.</div>}
 
-            {Array.isArray(cocktails) && cocktails.length > 0 && (
+            {Array.isArray(visible) && visible.length > 0 && (
                 <div id="cocktailList">
-                    {cocktails.map((element, idx) => {
+                    {visible.map((element, idx) => {
                         const cocktailID = element.Cocktail_ID ?? (idx + 1);
                         return (
                             <div

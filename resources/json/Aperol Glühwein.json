@@ -1,0 +1,57 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Aperol Glühwein",
+    "cocktail_description": "Glühwein Alternative",
+    "ingredients": [
+        {
+            "ingredient_name": "Rose",
+            "amount": 15,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Aperol",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Rohrzucker",
+            "amount": 15,
+            "unit": "g",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Nelke",
+            "amount": 1,
+            "unit": "Stk.",
+            "optional": true
+        },
+        {
+            "ingredient_name": "Vanille",
+            "amount": null,
+            "unit": "etwas",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Zimt",
+            "amount": null,
+            "unit": "etwas",
+            "optional": false
+        }
+    ],
+    "steps": [
+        {
+            "step_number": 1,
+            "instruction": "Rose mit Zucker und Gewürzen erwärmen"
+        },
+        {
+            "step_number": 2,
+            "instruction": "Aperol hinzugeben"
+        },
+        {
+            "step_number": 3,
+            "instruction": "Bis es anfängt zu dampfen"
+        }
+    ]
+}

@@ -10,13 +10,31 @@ li{
     list-style-type: none;
 }
 
+.ingredientList{
+    padding: 0;
+    margin: 0;
+}
+
+.ingredientList li{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+input[type="checkbox"]{
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
 @media (orientation: landscape) {
     .displayArea{
         float: left;
         width: calc(50%);
         min-height: 100%;
         overflow-y: scroll;
-        
+        height: 100vp;
     }
 
     .ingredientArea{

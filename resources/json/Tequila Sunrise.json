@@ -1,0 +1,39 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Tequila Sunrise",
+    "cocktail_description": "Ein Tequila zum Sonnenaufgang?",
+    "ingredients": [
+        {
+            "ingredient_name": "Tequila",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Orangensaft",
+            "amount": 15,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Grenadine",
+            "amount": 1,
+            "unit": "cl",
+            "optional": false
+        }
+    ],
+    "steps": [
+        {
+            "step_number": 1,
+            "instruction": "Grenadine auf die Eiswürfel im Glas geben"
+        },
+        {
+            "step_number": 2,
+            "instruction": "Tequila und Orangensaft shaken"
+        },
+        {
+            "step_number": 3,
+            "instruction": "Vorsichtig ins Glas gießen"
+        }
+    ]
+}

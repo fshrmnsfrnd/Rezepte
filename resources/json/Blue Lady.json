@@ -1,0 +1,35 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Blue Lady",
+    "cocktail_description": "Kleiner blauer Shot",
+    "ingredients": [
+        {
+            "ingredient_name": "Gin",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "BlueCuracao",
+            "amount": 2,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Zitronensaft",
+            "amount": 2,
+            "unit": "cl",
+            "optional": false
+        }
+    ],
+    "steps": [
+        {
+            "step_number": 1,
+            "instruction": "Alles shaken"
+        },
+        {
+            "step_number": 2,
+            "instruction": "In ein Glas geben"
+        }
+    ]
+}

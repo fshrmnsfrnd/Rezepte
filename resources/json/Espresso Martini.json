@@ -1,0 +1,35 @@
+{
+    "cocktail_id": null,
+    "cocktail_name": "Espresso Martini",
+    "cocktail_description": "Du kannst dich nicht zwischen Alkohol und Kaffee entscheiden?",
+    "ingredients": [
+        {
+            "ingredient_name": "Wodka",
+            "amount": 4,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "Zuckersirup",
+            "amount": 1,
+            "unit": "cl",
+            "optional": false
+        },
+        {
+            "ingredient_name": "kalter Espresso",
+            "amount": 2.5,
+            "unit": "cl",
+            "optional": false
+        }
+    ],
+    "steps": [
+        {
+            "step_number": 1,
+            "instruction": "Alles shaken"
+        },
+        {
+            "step_number": 2,
+            "instruction": "Servieren"
+        }
+    ]
+}
