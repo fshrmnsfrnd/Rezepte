@@ -2,7 +2,7 @@ import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 
 const db = await open({
-    filename: "db.db",
+    filename: "./src/db.db",
     driver: sqlite3.Database
 });
 
@@ -38,6 +38,7 @@ await db.exec(`
         Ingredient_ID INTEGER,
         Amount DECIMAL,
         Unit TEXT,
+        Optional BOOLEAN,
         FOREIGN KEY (Cocktail_ID) REFERENCES Cocktail(Cocktail_ID),
         FOREIGN KEY (Ingredient_ID) REFERENCES Ingredient(Ingredient_ID)
     );
@@ -68,9 +69,17 @@ await db.exec(`
         (7, 'Campari'),
         (8, 'Wermut');
 
-    INSERT OR IGNORE INTO Cocktail_Ingredient (Cocktail_ID, Ingredient_ID) VALUES
-        (1, 1), (1, 2), (1, 3), (1, 4), (1, 5), -- Mojito Zutaten
-        (2, 6), (2, 7), (2, 8); -- Negroni Zutaten
+    INSERT OR IGNORE INTO Cocktail_Ingredient (Cocktail_ID, Ingredient_ID, Amount, Unit, Optional) VALUES
+        -- Mojito
+        (1, 1, 1, 'piece', 0), -- Limette
+        (1, 2, 8, 'leaves', 0), -- Minze
+        (1, 3, 50, 'ml', 0), -- Weißer Rum
+        (1, 4, 2, 'tsp', 0), -- Zucker
+        (1, 5, 50, 'ml', 0), -- Soda
+        -- Negroni
+        (2, 6, 30, 'ml', 0), -- Gin
+        (2, 7, 30, 'ml', 0), -- Campari
+        (2, 8, 30, 'ml', 0); -- Wermut
 
     COMMIT;
 `);

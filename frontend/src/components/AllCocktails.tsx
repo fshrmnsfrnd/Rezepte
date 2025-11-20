@@ -63,7 +63,7 @@ export default function AllCocktails() {
                         return (
                             <div
                                 className="cocktailPreview"
-                                onClick={() => { navigate(`/recipe?cocktailID=${encodeURIComponent(String(cocktailID))}`); }}
+                                onClick={() => { window.location = `/recipe?cocktailID=${cocktailID}` as string & Location; }}
                                 role="button"
                                 key={cocktailID}
                             >
