@@ -22,28 +22,41 @@ li{
     margin-bottom: 6px;
 }
 
-input[type="checkbox"]{
-    width: 16px;
-    height: 16px;
-    margin: 0;
+.displayArea>.displayArea {
+    justify-content: center;
+    width: 100%;
 }
+
+/* Checkbox visual and sizing handled globally in `app/globals.css`. */
+
+.ingredientArea {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+/* Avoid global header overrides here; header layout is defined in app/globals.css */
 
 @media (orientation: landscape) {
     .displayArea{
         float: left;
-        width: calc(50%);
-        min-height: 100%;
-        overflow-y: scroll;
-        height: 100vp;
+        width: 50%;
+        min-height: 100vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+        padding: 8px;
     }
+}
 
-    .ingredientArea{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+@media (max-width: 640px) {
+    /* small screens handled by global styles */
+}
 
-    button{
-        clear:both;
+@media (orientation: portrait) {
+    .displayArea{
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px;
     }
 }
