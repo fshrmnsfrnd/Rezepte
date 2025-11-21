@@ -14,29 +14,44 @@ export async function POST(req: NextRequest) {
         const providedIds = Array.from(new Set(ids
             .map((v: any) => { const n = Number(v); return Number.isFinite(n) ? Math.trunc(n) : null; })
             .filter((v: number | null) => v !== null)));
+        
+        //For later implementation of functionality
+        const acceptMissingIngredients = 0;
 
-
-        // Build dynamic placeholders for the IN clause
-        const placeholders = providedIds.map(() => '?').join(',');
-
-        // New behavior: return cocktails that CONTAIN all provided ingredient IDs (i.e. providedIds ⊆ required_ingredients_of_cocktail)
-        // We consider only required ingredients (Optional IS NULL or 0). The HAVING counts distinct provided IDs that appear
-        // among the cocktail's required ingredients and requires that count to equal the number of provided IDs.
         const sql = `
-            SELECT c.Cocktail_ID as Cocktail_ID
-            FROM Cocktail c
-            LEFT JOIN Cocktail_Ingredient ci
-                ON c.Cocktail_ID = ci.Cocktail_ID AND (ci.Optional IS NULL OR ci.Optional = 0)
-            GROUP BY c.Cocktail_ID
-            HAVING COUNT(DISTINCT CASE WHEN ci.Ingredient_ID IN (${placeholders}) THEN ci.Ingredient_ID END) = ?
+            SELECT CI.Cocktail_ID, CI.Ingredient_ID
+            FROM Cocktail_Ingredient CI
+            WHERE CI.Optional = 0
+            ORDER BY CI.Cocktail_ID;
         `;
 
-        // params: first the providedIds for the IN(...) placeholders, then the expected match count (providedIds.length)
-        const params = [...providedIds, providedIds.length];
+        const dbRes = await db.all(sql);
 
-        const rows = await db.all(sql, params as any[]);
+        let cocktailMap = new Map<number, number[]>();
 
-        const cocktailIds = rows.map((r: any) => r.Cocktail_ID);
+        for (const row of dbRes) {
+            const currCID = Number(row.Cocktail_ID);
+            const currIID = Number(row.Ingredient_ID);
+            if(cocktailMap.has(currCID)){
+                cocktailMap.get(currCID)?.push(currIID);
+            }else{
+                cocktailMap.set(currCID, [currIID]);
+            }
+        }
+
+        const cocktailIds = new Array<number>;
+
+        for (const [cid, iids] of cocktailMap) {
+            let ingredientsNotProvided: number = 0;
+            for (const iid of iids) {
+                if (!providedIds.includes(iid)) {
+                    ingredientsNotProvided += 1;
+                }
+            }
+            if(ingredientsNotProvided <= acceptMissingIngredients){
+                cocktailIds.push(cid);
+            }
+        }
 
         return NextResponse.json(cocktailIds);
     } catch (ex) {

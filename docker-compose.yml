@@ -1,8 +1,9 @@
 services:
-  cocktails-app:
+  cocktails:
+    container_name: cocktails
     image: fshrmnsfrnd/cocktails:latest
     ports:
-      - "3000:3000"
+      - 3000:3000
     volumes:
       - /path/to/md/recipes:/app/resources/Markdown
     restart: always
