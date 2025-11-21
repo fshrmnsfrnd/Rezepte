@@ -120,12 +120,17 @@ export function CocktailDetail() {
                             </tbody>
                         </table>
 
-                        <h3>Zubereitung</h3>
-                        <ul>
-                            {selected.steps.map((s) => (
-                                <li key={s.id}>{s.number}. {s.description}</li>
-                            ))}
-                        </ul>
+                        {selected.steps.length != 0 && (
+                            <div>
+                                <h3>Zubereitung</h3>
+                                <ul>
+                                    {selected.steps.map((s) => (
+                                        <li key={s.id}>{s.number}. {s.description}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                            )
+                        }
                     </>
                 )}
             </div>
