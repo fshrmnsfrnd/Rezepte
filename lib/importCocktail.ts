@@ -69,6 +69,27 @@ export async function importCocktail(payload: any) {
             }
         }
 
+            // handle categories if provided
+            if (Array.isArray(payload.categories) && payload.categories.length > 0) {
+                for (const c of payload.categories) {
+                    // accept either string or object with category_name
+                    const catName = (typeof c === 'string') ? c.trim() : ((c && (c.category_name || c.Name || c.name)) ? String(c.category_name || c.Name || c.name).trim() : '');
+                    if (!catName) continue;
+                    // find existing category (case-insensitive)
+                    const existingCat = await db.get(`SELECT Category_ID AS id FROM Category WHERE Name = ? COLLATE NOCASE`, [catName]);
+                    let categoryId: number;
+                    if (existingCat && existingCat.id) {
+                        categoryId = existingCat.id;
+                    } else {
+                        const rc = await db.run(`INSERT INTO Category (Name) VALUES (?)`, [catName]);
+                        categoryId = rc.lastID as number;
+                    }
+
+                    // link cocktail <-> category
+                    await db.run(`INSERT INTO Cocktail_Category (Cocktail_ID, Category_ID) VALUES (?, ?)`, [cocktailId, categoryId]);
+                }
+            }
+
         await db.exec('COMMIT;');
         return { cocktail_id: cocktailId };
     } catch (err) {

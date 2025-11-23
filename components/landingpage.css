@@ -31,6 +31,10 @@ li{
     width: 100%;
 }
 
+button * {
+    all: unset;
+}
+
 /* optional to add in future
 .cocktailArea{
 

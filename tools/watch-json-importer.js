@@ -251,7 +251,7 @@ async function run() {
         });
     });
 
-    console.log(`Watching JSON resources at: ${jsonDir} -> POST to ${DEFAULT_API}`);
+    console.log(`Watching JSON resources at: ${jsonDir}`);
 }
 
 run();

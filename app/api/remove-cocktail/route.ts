@@ -20,12 +20,24 @@ export async function POST(req: NextRequest) {
 			return NextResponse.json({ error: 'Cocktail not found' }, { status: 404 });
 		}
 
-		// delete related rows in a transaction
 		await db.exec('BEGIN TRANSACTION;');
 		try {
 			await db.run(`DELETE FROM Step WHERE Cocktail_ID = ?`, [cocktail.id]);
 			await db.run(`DELETE FROM Cocktail_Ingredient WHERE Cocktail_ID = ?`, [cocktail.id]);
+			await db.run(`DELETE FROM Cocktail_Category WHERE Cocktail_ID = ?`, [cocktail.id]);
 			await db.run(`DELETE FROM Cocktail WHERE Cocktail_ID = ?`, [cocktail.id]);
+
+			// Clean up Ingredients
+			await db.run(`
+				DELETE FROM Ingredient
+				WHERE Ingredient_ID NOT IN (SELECT Ingredient_ID FROM Cocktail_Ingredient)
+			`);
+
+			// Clean up Category
+			await db.run(`
+				DELETE FROM Category
+				WHERE Category_ID NOT IN (SELECT Category_ID FROM Cocktail_Category)
+			`);
 
 			await db.exec('COMMIT;');
 			return NextResponse.json({ deleted: true, cocktail_id: cocktail.id });

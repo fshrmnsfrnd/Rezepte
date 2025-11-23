@@ -38,14 +38,16 @@ await db.exec(`
         FOREIGN KEY (Cocktail_ID) REFERENCES Cocktail(Cocktail_ID),
         FOREIGN KEY (Ingredient_ID) REFERENCES Ingredient(Ingredient_ID)
     );
-`);
 
-// Clear existing data for testing
-/*
-await db.exec(`
-    DELETE FROM Cocktail;
-    DELETE FROM Step;
-    DELETE FROM Ingredient;
-    DELETE FROM Cocktail_Ingredient;
-    `);
-*/
+    CREATE TABLE IF NOT EXISTS Category (
+        Category_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Name TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS Cocktail_Category (
+        Cocktail_ID INTEGER,
+        Category_ID INTEGER,
+        FOREIGN KEY (Cocktail_ID) REFERENCES Cocktail(Cocktail_ID),
+        FOREIGN KEY (Category_ID) REFERENCES Category(Category_ID)
+    );
+`);

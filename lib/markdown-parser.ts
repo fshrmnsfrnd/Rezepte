@@ -1,4 +1,4 @@
-import path from 'path';
+import * as path from 'path';
 
 export function safeFileName(name: string) {
     return name.replace(/[\\/:*?"<>|]/g, '_');
@@ -34,6 +34,29 @@ export function parseMarkdownToJson(markdown: string, fileName: string) {
             const txt = l.replace(/^>\s?/, '').trim();
             if (txt.length > 0) {
                 cocktail_description += (cocktail_description ? '\n' : '') + txt;
+            }
+        }
+    }
+
+    // parse YAML-like frontmatter for categories (look for 'Kategorie' key)
+    const categories: { category_id: null; category_name: string }[] = [];
+    if (lines.length > 0 && lines[0].trim() === '---') {
+        let fmEnd = -1;
+        for (let i = 1; i < lines.length; i++) {
+            if (lines[i].trim() === '---') { fmEnd = i; break; }
+        }
+        if (fmEnd !== -1) {
+            const fmLines = lines.slice(1, fmEnd);
+            for (let i = 0; i < fmLines.length; i++) {
+                const l = fmLines[i].trim();
+                if (/^Kategorie\s*:/i.test(l)) {
+                    for (let j = i + 1; j < fmLines.length; j++) {
+                        const m = fmLines[j].match(/^\s*-\s*(.+)$/);
+                        if (m) categories.push({ category_id: null, category_name: m[1].trim() });
+                        else break;
+                    }
+                    break;
+                }
             }
         }
     }
@@ -122,6 +145,7 @@ export function parseMarkdownToJson(markdown: string, fileName: string) {
         cocktail_id: null,
         cocktail_name: title,
         cocktail_description: cocktail_description,
+        categories,
         ingredients,
         steps
     };
