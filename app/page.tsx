@@ -44,13 +44,13 @@ export default function Home() {
               aria-label="Suche Zutaten"
             />
           </div>
-          <div style={{ marginBottom: 12, justifySelf: 'center' }}>
-            <label htmlFor="amountOfMissingIngredients"> Anzahl der Zutaten die fehlen dürfen:</label>
+          <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <label htmlFor="amountOfMissingIngredients">Anzahl der Zutaten, die fehlen dürfen:</label>
             <input
               id="amountOfMissingIngredients"
               type="number"
               placeholder="Anzahl..."
-              value={missingAmount ? missingAmount : "0"}
+              value={missingAmount ?? 0}
               onChange={(e) => setMissingAmount(Number(e.target.value))}
               aria-label="Anzahl fehlender Zutaten"
             />
