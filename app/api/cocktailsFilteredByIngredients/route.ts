@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const ids = Array.isArray(body) ? body : body?.ingredient_ids || body?.ids;
+        const ids = Array.isArray(body) ? body : body?.ids;
 
         if (!Array.isArray(ids)) {
             return NextResponse.json({ error: 'Expected an array of ingredient IDs' }, { status: 400 });
@@ -15,8 +15,13 @@ export async function POST(req: NextRequest) {
             .map((v: any) => { const n = Number(v); return Number.isFinite(n) ? Math.trunc(n) : null; })
             .filter((v: number | null) => v !== null)));
         
-        //For later implementation of functionality
-        const acceptMissingIngredients = 0;
+        // Read allowed missing ingredients from the request body (defaults to 0)
+        const rawAllowedMissing = body?.amountMissingIngredients;
+        let acceptMissingIngredients = 0;
+        if (rawAllowedMissing != null) {
+            const n = Number(rawAllowedMissing);
+            acceptMissingIngredients = Number.isFinite(n) && n >= 0 ? Math.trunc(n) : 0;
+        }
 
         const sql = `
             SELECT CI.Cocktail_ID, CI.Ingredient_ID
@@ -48,7 +53,7 @@ export async function POST(req: NextRequest) {
                     ingredientsNotProvided += 1;
                 }
             }
-            if(ingredientsNotProvided <= acceptMissingIngredients){
+            if (ingredientsNotProvided <= acceptMissingIngredients) {
                 cocktailIds.push(cid);
             }
         }

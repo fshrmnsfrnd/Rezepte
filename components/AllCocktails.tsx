@@ -24,14 +24,14 @@ type Props = {
     searchTerm?: string | null;
 };
 
-export default function AllCocktails({ filterIds, searchTerm }: Props) {
+export default function AllCocktails({ filterIds, searchTerm}: Props) {
     const [cocktails, setCocktails] = useState<CocktailRow[] | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     async function loadCocktails(): Promise<void> {
         setError(null);
         try {
-            const res = await fetch("/api/cocktails");
+            const res = await fetch('/api/cocktails');
             const ct = res.headers.get("content-type") || "";
             let data: any;
             if (ct.includes("application/json")) data = await res.json();

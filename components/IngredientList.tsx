@@ -10,9 +10,10 @@ type Ingredient = {
 type Props = {
     onFilterChange?: (cocktailIds: number[] | null) => void;
     searchTerm?: string | null;
+    amountMissingIngredients?: number;
 };
 
-export default function IngredientList({ onFilterChange, searchTerm}: Props) {
+export default function IngredientList({ onFilterChange, searchTerm, amountMissingIngredients = 0}: Props) {
     
     const [ingredients, setIngredients] = useState<Ingredient[] | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -52,7 +53,7 @@ export default function IngredientList({ onFilterChange, searchTerm}: Props) {
             const res = await fetch('/api/cocktailsFilteredByIngredients', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newSelected),
+                body: JSON.stringify({ ids: newSelected, amountMissingIngredients: amountMissingIngredients }),
             });
 
             const ct = res.headers.get('content-type') || '';
@@ -82,11 +83,11 @@ export default function IngredientList({ onFilterChange, searchTerm}: Props) {
         });
     }
 
-    // Call API whenever selectedIds changes — avoid updating parent state during render
+    // Call API whenever selectedIds or amountMissingIngredients changes — avoid updating parent state during render
     useEffect(() => {
         updateFilterFromSelection(Array.from(selectedIds.values()));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedIds]);
+    }, [selectedIds, amountMissingIngredients]);
 
     const term = (searchTerm ?? '').trim().toLowerCase();
     const filteredIngredients = Array.isArray(ingredients)
