@@ -21,13 +21,12 @@ type Selected = {
 
 type Props = {
     filterIds?: number[] | null;
+    searchTerm?: string | null;
 };
 
-export default function AllCocktails({ filterIds }: Props) {
+export default function AllCocktails({ filterIds, searchTerm }: Props) {
     const [cocktails, setCocktails] = useState<CocktailRow[] | null>(null);
     const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => { loadCocktails(); }, []);
 
     async function loadCocktails(): Promise<void> {
         setError(null);
@@ -49,20 +48,32 @@ export default function AllCocktails({ filterIds }: Props) {
             setCocktails(null);
         }
     }
-
+    
+    useEffect(() => { loadCocktails(); }, []);
     const visible = Array.isArray(cocktails)
         ? (filterIds == null ? cocktails : cocktails.filter(c => filterIds.includes(c.Cocktail_ID as number)))
         : null;
 
+    const term = (searchTerm ?? '').trim().toLowerCase();
+    const visibleFiltered = Array.isArray(visible)
+        ? (term
+            ? visible.filter(c => {
+                const name = (c.Name ?? '').toString().toLowerCase();
+                const desc = (c.Description ?? '').toString().toLowerCase();
+                return name.includes(term) || desc.includes(term);
+            })
+            : visible)
+        : null;
+
     return (
-        <div className="displayArea">
+        <div className="cocktailArea">
             {error && <div style={{ color: 'red' }}>Error: {error}</div>}
 
-            {Array.isArray(visible) && visible.length === 0 && <div>No records found.</div>}
+            {Array.isArray(visibleFiltered) && visibleFiltered.length === 0 && <div>No records found.</div>}
 
-            {Array.isArray(visible) && visible.length > 0 && (
+            {Array.isArray(visibleFiltered) && visibleFiltered.length > 0 && (
                 <div id="cocktailList">
-                    {visible.map((element, idx) => {
+                    {visibleFiltered.map((element, idx) => {
                         const cocktailID = element.Cocktail_ID ?? (idx + 1);
                         return (
                             <div

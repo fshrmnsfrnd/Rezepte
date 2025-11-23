@@ -13,6 +13,10 @@ li{
 .ingredientList{
     padding: 0;
     margin: 0;
+    /* Ensure list itself has no top spacing */
+    padding-top: 0;
+    margin-top: 0;
+    justify-self: center;
 }
 
 .ingredientList li{
@@ -22,21 +26,18 @@ li{
     margin-bottom: 6px;
 }
 
-.displayArea>.displayArea {
+.displayArea {
     justify-content: center;
     width: 100%;
 }
 
-/* Checkbox visual and sizing handled globally in `app/globals.css`. */
+.cocktailArea{
 
-.ingredientArea {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
 }
 
-/* Avoid global header overrides here; header layout is defined in app/globals.css */
+.ingredientArea{
+    
+}
 
 @media (orientation: landscape) {
     .displayArea{
@@ -47,10 +48,6 @@ li{
         box-sizing: border-box;
         padding: 8px;
     }
-}
-
-@media (max-width: 640px) {
-    /* small screens handled by global styles */
 }
 
 @media (orientation: portrait) {

@@ -9,9 +9,10 @@ type Ingredient = {
 
 type Props = {
     onFilterChange?: (cocktailIds: number[] | null) => void;
+    searchTerm?: string | null;
 };
 
-export default function IngredientList({ onFilterChange }: Props) {
+export default function IngredientList({ onFilterChange, searchTerm}: Props) {
     
     const [ingredients, setIngredients] = useState<Ingredient[] | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -87,15 +88,27 @@ export default function IngredientList({ onFilterChange }: Props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedIds]);
 
+    const term = (searchTerm ?? '').trim().toLowerCase();
+    const filteredIngredients = Array.isArray(ingredients)
+        ? ingredients.filter(i => {
+            if (!term) return true;
+            return (i.Name ?? '').toLowerCase().includes(term);
+        })
+        : [];
+
     return (
-        <div className="displayArea ingredientArea">
+        <div className="ingredientArea">
             {error && <div style={{ color: 'red' }}>Error: {error}</div>}
 
             {Array.isArray(ingredients) && ingredients.length === 0 && <div>No records found.</div>}
 
-            {Array.isArray(ingredients) && ingredients.length > 0 && (
+            {Array.isArray(ingredients) && filteredIngredients.length === 0 && ingredients.length > 0 && (
+                <div>Keine Treffer.</div>
+            )}
+
+            {filteredIngredients.length > 0 && (
                 <ul className="ingredientList">
-                    {ingredients.map((element, idx) => {
+                    {filteredIngredients.map((element, idx) => {
                         const ingredientID = element.Ingredient_ID ?? (idx + 1);
                         const strId = `ingredient-${ingredientID}`;
                         return (
