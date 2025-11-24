@@ -45,6 +45,11 @@ button * {
 }
 */
 
+.prep-content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
 @media (orientation: landscape) {
     .displayArea{
         float: left;
@@ -79,5 +84,9 @@ button * {
         width: 92%;
         max-width: 640px;
         box-sizing: border-box;
+    }
+
+    .prep-timer-row {
+        display: block;
     }
 }

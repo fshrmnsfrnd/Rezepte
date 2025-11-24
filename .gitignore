@@ -47,5 +47,5 @@ package-lock.json
 db.db
 
 #local test reciepes
-/resources/json/*
-/resources/Markdown/*
+#/resources/json/*
+#/resources/Markdown/*

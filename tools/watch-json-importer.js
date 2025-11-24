@@ -2,12 +2,40 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-
+// Load environment variables
+try {
+    const dotenv = require('dotenv');
+    const envFiles = ['.env.local', '.env'];
+    for (const file of envFiles) {
+        const full = path.resolve(__dirname, '..', file);
+        if (fs.existsSync(full)) {
+            dotenv.config({ path: full });
+            break;
+        }
+    }
+} catch (e) {
+    console.warn('[watch-json-importer] dotenv load skipped: ' + e.message);
+}
 const projectRoot = path.resolve(__dirname, '..');
 const jsonDir = path.join(projectRoot, 'resources', 'json');
 
-const DEFAULT_API = process.env.JSON_IMPORT_API || 'http://localhost:3000/api/import-cocktail';
-const DEFAULT_REMOVE_API = process.env.JSON_REMOVE_API || 'http://localhost:3000/api/remove-cocktail';
+const importApi = 'http://localhost:3000/api/import-cocktail';
+const removeApi = 'http://localhost:3000/api/remove-cocktail';
+const importApiUrl = new URL(importApi);
+const removeApiUrl = new URL(removeApi);
+const apiKey = process.env.API_KEY;
+if (!apiKey) {
+    console.warn('Hinweis: Kein API_KEY in Environment gefunden. Setze Env oder .env(.local).');
+}
+
+function buildHeaders() {
+    const headers = {};
+    // Only include API_KEY header when defined to avoid sending 'undefined'
+    if (apiKey) {
+        headers['API_KEY'] = apiKey;
+    }
+    return headers;
+}
 
 function logEvent(evt) {
     console.log(JSON.stringify(Object.assign({ ts: new Date().toISOString() }, evt)));
@@ -55,17 +83,20 @@ async function postJsonToApi(jsonPath, attempt = 1) {
 
         // send to API
         const body = JSON.stringify(parsed);
-        const url = new URL(DEFAULT_API);
+        const baseHeaders = buildHeaders();
+        const headers = Object.assign({}, baseHeaders, {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(body)
+        });
+
         const opts = {
-            hostname: url.hostname,
-            port: url.port || 80,
-            path: url.pathname + (url.search || ''),
+            hostname: importApiUrl.hostname,
+            port: importApiUrl.port || 80,
+            path: importApiUrl.pathname + (importApiUrl.search || ''),
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(body)
-            }
+            headers: headers
         };
+        logEvent({ type: 'debug-request', target: 'import', hasApiKey: Boolean(apiKey), headers: Object.keys(opts.headers) });
 
         const MAX_ATTEMPTS = 5;
 
@@ -110,17 +141,20 @@ function postRemoveToApi(jsonPath, attempt = 1) {
         const name = base.replace(/\.json$/i, '');
 
         const body = JSON.stringify({ name });
-        const url = new URL(DEFAULT_REMOVE_API);
+        const baseHeaders = buildHeaders();
+        const headers = Object.assign({}, baseHeaders, {
+            'Content-Type': 'application/json',
+            'Content-Length': Buffer.byteLength(body)
+        });
+
         const opts = {
-            hostname: url.hostname,
-            port: url.port || 80,
-            path: url.pathname + (url.search || ''),
+            hostname: removeApiUrl.hostname,
+            port: removeApiUrl.port || 80,
+            path: removeApiUrl.pathname + (removeApiUrl.search || ''),
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(body)
-            }
+            headers: headers
         };
+        logEvent({ type: 'debug-request', target: 'remove', hasApiKey: Boolean(apiKey), headers: Object.keys(opts.headers) });
 
         const MAX_ATTEMPTS = 5;
 
@@ -217,10 +251,10 @@ function waitForService(apiUrl, name, attempt = 1) {
 }
 
 async function run() {
-    logEvent({ type: 'waiting', message: 'Waiting for import API to be available', url: DEFAULT_API });
-    await waitForService(DEFAULT_API, 'import-api');
-    logEvent({ type: 'waiting', message: 'Waiting for remove API to be available', url: DEFAULT_REMOVE_API });
-    await waitForService(DEFAULT_REMOVE_API, 'remove-api');
+    logEvent({ type: 'waiting', message: 'Waiting for import API to be available', url:importApi });
+    await waitForService(importApi, 'import-api');
+    logEvent({ type: 'waiting', message: 'Waiting for remove API to be available', url: removeApi });
+    await waitForService(removeApi, 'remove-api');
 
     // start processing files and watching
     initialPostAll();

@@ -1,4 +1,6 @@
 /* Preparation + Timer layout */
+
+
 .prep-timer-row {
     display: flex;
     gap: 16px;
@@ -6,11 +8,6 @@
     justify-content: space-between;
     width: 100%;
     box-sizing: border-box;
-}
-
-.prep-content {
-    flex: 1 1 auto;
-    min-width: 0;
 }
 
 .timer-box {
@@ -88,7 +85,5 @@
 
 /* Portrait: place timer fixed at bottom center and give page bottom padding */
 @media (orientation: portrait) {
-    .prep-timer-row {
-            display: block;
-        }
+    
 }

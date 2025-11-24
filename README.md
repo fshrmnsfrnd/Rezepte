@@ -135,6 +135,8 @@ Header-Layout: Die Startseite nutzt im Header zwei `.showArea`-Boxen ("Zutaten" 
 
 Rohdaten liegen in `resources/json` (JSON-Dateien) und `Markdown/` (Markdown-Rezepte). Die `tools/`-Skripte überwachen diese Ordner und importieren Änderungen in die SQLite-Datenbank.
 
+Hinweis zur Sicherheit: Der Import-Endpunkt (`/api/import-cocktail`) kann mit einem `API_KEY` geschützt werden. Die Watch-Skripte (z. B. `tools/watch-json-importer.js`) lesen `API_KEY` aus der Umgebung (z. B. `.env.local`) und senden ihn als Header beim Posten. Wenn auf dem Server kein `API_KEY` gesetzt ist, wird die Authentifizierung im lokalen/dev-Setup übersprungen, damit lokale Importe unkompliziert funktionieren. In Produktionsumgebungen sollte `API_KEY` gesetzt werden, um den Endpunkt zu schützen.
+
 Wenn du Daten manuell importieren willst, schau dir `tools/watch-json-importer.js` und `tools/watchMarkdown.js` an; du kannst die Logik auch direkt ausführen, z. B.: `node tools/watch-json-importer.js`.
 
 Die SQLite-Datei liegt (im Development) typischerweise als `db.db` im Projekt-Root.

@@ -17,6 +17,7 @@ export async function importCocktail(payload: any) {
     const description = payload.cocktail_description || payload.description || null;
     const ingredients: IngredientIn[] = payload.ingredients || [];
     const steps: StepIn[] = payload.steps || [];
+    const apiKey = process.env.API_KEY;
 
     if (!name) {
         throw { status: 400, message: 'Missing cocktail name' };
@@ -27,19 +28,72 @@ export async function importCocktail(payload: any) {
     }
 
     await db.exec('BEGIN TRANSACTION;');
+    //Check if Cocktail already exists
     try {
-        // If a cocktail with the same name exists, remove it first (replace behavior)
-        const existing = await db.get(
-            `SELECT Cocktail_ID AS id FROM Cocktail WHERE Name = ? COLLATE NOCASE`,
-            [name]
-        );
+        let existingId: number | null = null;
+        try {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+            };
+            if (apiKey != null) {
+                headers['API_KEY'] = apiKey;
+            }
 
-        if (existing && existing.id) {
-            await db.run(`DELETE FROM Step WHERE Cocktail_ID = ?`, [existing.id]);
-            await db.run(`DELETE FROM Cocktail_Ingredient WHERE Cocktail_ID = ?`, [existing.id]);
-            await db.run(`DELETE FROM Cocktail WHERE Cocktail_ID = ?`, [existing.id]);
+            const resp = await fetch('/api/cocktail-exists', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ cocktail_name: name }),
+            });
+
+            if (resp.ok) {
+                const json = await resp.json();
+                if (json && json.exists && json.cocktail_id) {
+                    existingId = Number(json.cocktail_id) || null;
+                }
+            } else {
+                console.warn('cocktail-exists API returned non-OK:', resp.status);
+                await db.exec('ROLLBACK;');
+                return;
+            }
+        } catch (apiErr) {
+            console.warn('cocktail-exists API call failed, falling back to DB check', apiErr);
+            await db.exec('ROLLBACK;');
+            return;
         }
 
+        //If cocktail exists: Remove it and clean up the other Tables
+        if (existingId) {
+            const idNum = Number(existingId);
+            try {
+                const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                if (apiKey != null) headers['API_KEY'] = String(apiKey);
+
+                const resp = await fetch('/api/remove-cocktail', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({ cocktail_id: idNum }),
+                });
+
+                if (resp.ok) {
+                    const jr = await resp.json().catch(() => null);
+                    if (!(!jr || (jr && !jr.error))) {
+                        console.warn('remove-cocktail API returned error payload', jr);
+                        await db.exec('ROLLBACK;');
+                        return;
+                    }
+                } else {
+                    console.warn('remove-cocktail API returned non-OK:', resp.status);
+                    await db.exec('ROLLBACK;');
+                    return;
+                }
+            } catch (apiErr) {
+                console.warn('remove-cocktail API call failed, falling back to DB deletes', apiErr);
+                await db.exec('ROLLBACK;');
+                return;
+            }
+        }
+
+        
         const res = await db.run(`INSERT INTO Cocktail (Name, Description) VALUES (?, ?)`, [name, description]);
         const cocktailId = res.lastID as number;
 

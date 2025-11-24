@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
+    // Authorization
+    const expectedKey = process.env.API_KEY;
+    const providedKey = req.headers.get('API_KEY') || req.headers.get('x-api-key');
+
+    if (expectedKey) {
+        if (!providedKey) {
+            console.error('[API:cocktailsFilteredByIngredients]:No API_KEY provided');
+            return NextResponse.json({ error: '[API:cocktailsFilteredByIngredients]:No API_KEY provided' }, { status: 401 });
+        }
+
+        if (providedKey !== expectedKey) {
+            console.error('[API:cocktailsFilteredByIngredients]:Invalid API_KEY provided');
+            return NextResponse.json({ error: '[API:cocktailsFilteredByIngredients]:Invalid API_KEY' }, { status: 403 });
+        }
+    } else {
+        console.warn('[API:cocktailsFilteredByIngredients]:No server API_KEY set — skipping auth (dev only)');
+    }
+    
     try {
         const body = await req.json();
         const ids = Array.isArray(body) ? body : body?.ids;
