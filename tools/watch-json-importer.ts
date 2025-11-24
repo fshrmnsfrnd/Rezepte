@@ -6,9 +6,8 @@ const projectRoot = path.resolve(__dirname, '..');
 const jsonDir = path.join(projectRoot, 'resources', 'json');
 
 //check if important things exist
-if (!apiKey) {
+if (!process.env.API_KEY) {
     console.warn('Hinweis: API_KEY not found in Environment');
-    return;
 }
 
 if (!fs.existsSync(jsonDir)) {
@@ -19,7 +18,7 @@ if (!fs.existsSync(jsonDir)) {
 // debounce map
 const recent = new Map();
 
-function shouldEmit(key) {
+function shouldEmit(key:string) {
     const now = Date.now();
     const last = recent.get(key) || 0;
     if (now - last < 200) return false;
@@ -30,19 +29,19 @@ function shouldEmit(key) {
     return true;
 }
 
-async function postJsonToApi(jsonPath, attempt = 1) {
+async function postJsonToApi(jsonPath:string, attempt:number = 1) {
     try {
         const content = fs.readFileSync(jsonPath, 'utf8');
         let parsed;
         try {
             parsed = JSON.parse(content);
-        } catch (pe) {
+        } catch (ex) {
             if (attempt <= 5) {
                 // file might be still being written; retry shortly
                 setTimeout(() => postJsonToApi(jsonPath, attempt + 1), 200);
                 return;
             }
-            console.error('parse-error | path: ' + path.relative(projectRoot, jsonPath) + ' | message: |' + pe.message);
+            console.error('parse-error | path: ' + path.relative(projectRoot, jsonPath) + ' | message: |' + (ex instanceof Error ? ex.message : String(ex)));
             return;
         }
 
@@ -58,26 +57,26 @@ async function postJsonToApi(jsonPath, attempt = 1) {
         try{
             res = await fetch('/api/import-cocktail', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'API_KEY': process.env.API_KEY },
+                headers: { 'Content-Type': 'application/json', 'API_KEY': process.env.API_KEY ?? '' },
                 body: JSON.stringify(parsed),
             });
             res.json();
 
             //try again if not succesfull
-            if((res.status != "201" || res.status != 201) && attempt <= maxAttempts){
+            if(res.status != 201 && attempt <= maxAttempts){
                 const delay = 200 * Math.pow(2, attempt);
                 setTimeout(() => postJsonToApi(jsonPath, attempt + 1), delay);
             }
-        }catch(fetchError){
-            console.error('fetch-error | API: import-cocktail | message: |' + pe.message);
+        }catch(ex){
+            console.error('fetch-error | API: import-cocktail | message: |' + (ex instanceof Error ? ex.message : String(ex)));
         }
 
     } catch (ex) {
-        console.error('error | path: ' + path.relative(projectRoot, jsonPath) + ' | message: |' + ex.message);
+        console.error('error | path: ' + path.relative(projectRoot, jsonPath) + ' | message: |' + (ex instanceof Error ? ex.message : String(ex)));
     }
 }
 
-async function postRemoveToApi(jsonPath, attempt = 1) {
+async function postRemoveToApi(jsonPath: string, attempt = 1) {
     // send to API
     const base = path.basename(jsonPath);
     const name = base.replace(/\.json$/i, '');
@@ -87,26 +86,26 @@ async function postRemoveToApi(jsonPath, attempt = 1) {
     try {
         res = await fetch('/api/remove-cocktail', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'API_KEY': process.env.API_KEY },
+            headers: { 'Content-Type': 'application/json', 'API_KEY': process.env.API_KEY ?? '' },
             body: JSON.stringify({ name }),
         });
         res.json();
 
         //try again if not succesfull
-        if ((res.status != "200" || res.status != 200) && attempt <= maxAttempts) {
+        if (res.status != 200 && attempt <= maxAttempts) {
             const delay = 200 * Math.pow(2, attempt);
             setTimeout(() => postRemoveToApi(jsonPath, attempt + 1), delay);
         }
     } catch (ex) {
-        console.error('fetch-error | API: remove-cocktail | message: |' + ex.message);
+        console.error('fetch-error | API: remove-cocktail | message: |' + (ex instanceof Error ? ex.message : String(ex)));
     }
 }
 
 // On startup, try to post all existing JSON files
 function initialPostAll() {
-    fs.readdir(jsonDir, (err, files) => {
+    fs.readdir(jsonDir, (err: NodeJS.ErrnoException | null, files: string[]) => {
         if (err) return;
-        files.filter(f => f.toLowerCase().endsWith('.json')).forEach(f => {
+        files.filter((f: string) => f.toLowerCase().endsWith('.json')).forEach((f: string) => {
             const full = path.join(jsonDir, f);
             postJsonToApi(full);
         });
@@ -114,7 +113,7 @@ function initialPostAll() {
 }
 
 // wait for services and then start the watcher
-function waitForService(apiUrl, attempt = 1) {
+function waitForService(apiUrl: string, attempt = 1) {
     const url = new URL(apiUrl);
     const opts = {
         hostname: url.hostname,
@@ -126,17 +125,17 @@ function waitForService(apiUrl, attempt = 1) {
 
     return new Promise((resolve) => {
         const tryOnce = () => {
-            const req = http.request(Object.assign({}, opts), (res) => {
+            const req = http.request(Object.assign({}, opts), (res: any) => {
                 console.log("[watch-json-importer]: service ready")
                 res.resume();
-                resolve();
+                resolve(undefined);
             });
 
             req.on('timeout', () => {
                 req.destroy();
             });
 
-            req.on('error', (err) => {
+            req.on('error', (err: any) => {
                 console.log("[watch-json-importer]: service error" + err.message)
                 const delay = Math.min(10000, 200 * Math.pow(2, Math.max(0, attempt - 1)));
                 setTimeout(() => {
@@ -147,8 +146,8 @@ function waitForService(apiUrl, attempt = 1) {
 
             try {
                 req.end();
-            } catch (e) {
-                console.log("[watch-json-importer]: service wait" + e.message)
+            } catch (ex) {
+                console.log("[watch-json-importer]: service wait" + (ex instanceof Error ? ex.message : String(ex)));
                 const delay = Math.min(10000, 200 * Math.pow(2, Math.max(0, attempt - 1)));
                 setTimeout(() => {
                     attempt++;
@@ -171,22 +170,21 @@ async function run() {
     // start processing files and watching
     initialPostAll();
 
-    fs.watch(jsonDir, { recursive: true }, (eventType, filename) => {
+    fs.watch(jsonDir, { recursive: true }, (eventType:any, filename:any) => {
         const rel = filename;
         if (!rel.toLowerCase().endsWith('.json')) return;
         if (!shouldEmit(`${eventType}:${rel}`)) return;
 
         const full = path.join(jsonDir, rel);
-        fs.stat(full, (err, stats) => {
+        fs.stat(full, (err:any, stats:any) => {
             if (err) {
                 if (err.code === 'ENOENT') {
                     console.error('removed | path: ' + path.relative(projectRoot, full));
                     // attempt to notify API to remove the cocktail corresponding to this file
                     try {
                         postRemoveToApi(full);
-                    } catch (e) {
-                        logEvent({ type: 'error', path: path.relative(projectRoot, full), message: 'postRemoveToApi failed: ' + (e && e.message) });
-                        console.error('error | path: ' + path.relative(projectRoot, jsonPath) + ' | message: |' + e.message);
+                    } catch (ex) {
+                        console.error('error | path: ' + path.relative(projectRoot, full) + ' | message: |' + (ex instanceof Error ? ex.message : String(ex)));
                     }
                 }
                 return;
