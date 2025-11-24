@@ -1,11 +1,13 @@
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
-    const id = parseInt(req.nextUrl.searchParams.get("id") || "", 10);
-    if (!id) {
-        return NextResponse.json({ error: "Missing id query parameter" }, { status: 400 });
-    }
+export async function POST(req: NextRequest) {
+    // No Authorization because it doesnt write on the Server and Database
+
+    //Get Param
+    const body = await req.json();
+    const id: number = parseInt(body.id, 10);
+    if (!id) return NextResponse.json({ error: "Missing id query parameter" }, { status: 400 });
 
     // load cocktail
     const cocktail = await db.get(

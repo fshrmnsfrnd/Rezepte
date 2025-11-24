@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { removeCocktail } from "@/lib/dbUtils";
+import { authorize } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
-	// Validate API key from request headers against server env var
-	const expectedKey = process.env.API_KEY;
-	const providedKey = req.headers.get('API_KEY');
+	// Authorization
+	const providedKey: string | null = req.headers.get('API_KEY') || req.headers.get('x-api-key');
 
-	if (!providedKey) {
-		console.error('[API:remove-cocktail]:No API_KEY provided');
-		return NextResponse.json({ error: '[API:remove-cocktail]:No API_KEY provided' }, { status: 401 });
-	}
-
-	if (providedKey !== expectedKey) {
-		console.error('[API:remove-cocktail]:Invalid API_KEY provided');
-		return NextResponse.json({ error: '[API:remove-cocktail]:Invalid API_KEY' }, { status: 403 });
+	if (!authorize(providedKey)) {
+		console.error('[remove-cocktail]:error in authentication');
+		return NextResponse.json({ error: '[remove-cocktail]:error in authentication' }, { status: 400 });
 	}
 
 	try {

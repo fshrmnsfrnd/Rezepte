@@ -1,23 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CocktailData, cocktailExists, removeCocktail, createCocktail } from '@/lib/dbUtils';
+import { authorize } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
     // Authorization
-    const expectedKey = process.env.API_KEY;
-    const providedKey = req.headers.get('API_KEY') || req.headers.get('x-api-key');
+    const providedKey: string | null = req.headers.get('API_KEY') || req.headers.get('x-api-key');
 
-    if (expectedKey) {
-        if (!providedKey) {
-            console.error('[API:import-cocktail]:No API_KEY provided');
-            return NextResponse.json({ error: '[API:import-cocktail]:No API_KEY provided' }, { status: 401 });
-        }
-
-        if (providedKey !== expectedKey) {
-            console.error('[API:import-cocktail]:Invalid API_KEY provided');
-            return NextResponse.json({ error: '[API:import-cocktail]:Invalid API_KEY' }, { status: 403 });
-        }
-    } else {
-        console.warn('[API:import-cocktail]:No server API_KEY set — skipping auth (dev only)');
+    if (!authorize(providedKey)) {
+        console.error('[import-cocktail]:error in authentication');
+        return NextResponse.json({ error: '[import-cocktail]:error in authentication' }, { status: 400 });
     }
     
     try {

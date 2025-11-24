@@ -19,8 +19,8 @@ try {
 const projectRoot = path.resolve(__dirname, '..');
 const jsonDir = path.join(projectRoot, 'resources', 'json');
 
-const importApi = 'http://localhost:3000/api/import-cocktail';
-const removeApi = 'http://localhost:3000/api/remove-cocktail';
+const importApi = '/api/import-cocktail';
+const removeApi = '/api/remove-cocktail';
 const importApiUrl = new URL(importApi);
 const removeApiUrl = new URL(removeApi);
 const apiKey = process.env.API_KEY;
@@ -100,7 +100,13 @@ async function postJsonToApi(jsonPath, attempt = 1) {
 
         const MAX_ATTEMPTS = 5;
 
-        const req = http.request(opts, (res) => {
+        const req = await fetch('/api/cocktailsFilteredByIngredients', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'API_KEY': apiKey },
+            body: JSON.stringify({ ids: newSelected, amountMissingIngredients: amountMissingIngredients }),
+        });
+
+        req = http.request(opts, (res) => {
             let data = '';
             res.on('data', (c) => data += c);
             res.on('end', () => {

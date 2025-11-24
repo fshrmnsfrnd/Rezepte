@@ -9,6 +9,7 @@ type Ingredient = {
     unit: string;
     name: string;
 };
+
 type Step = { id: number; number?: number; description?: string };
 type Selected = {
     name: string;
@@ -16,6 +17,7 @@ type Selected = {
     ingredients: Ingredient[];
     steps: Step[];
 };
+
 export default function CocktailWrapper(){
     return(
         <Suspense fallback={<div>Loading cocktail details…</div>}>
@@ -23,6 +25,7 @@ export default function CocktailWrapper(){
         </Suspense>
     )
 }
+
 export function CocktailDetail() {
     const [error, setError] = useState<string | null>(null);
     const [selected, setSelected] = useState<Selected | null>(null);
@@ -46,7 +49,11 @@ export function CocktailDetail() {
             setLoading(true);
             setError(null);
             try {
-                const res = await fetch(`/api/cocktail?id=${id}`);
+                const res = await fetch('/api/cocktail', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id}),
+                });
                 if (!res.ok) throw new Error(`API returned ${res.status}`);
                 const data: any = await res.json();
 
