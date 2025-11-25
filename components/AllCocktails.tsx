@@ -82,8 +82,8 @@ export default function AllCocktails({ filterIds, searchTerm}: Props) {
                                 role="button"
                                 key={cocktailID}
                             >
-                                <h3>{element.Name}</h3>
-                                <p>{element.Description}</p>
+                                <h3 className="h3">{element.Name}</h3>
+                                <p className="p">{element.Description}</p>
                                 
                             </div>
                         );

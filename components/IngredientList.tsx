@@ -153,27 +153,28 @@ export default function IngredientList({ onFilterChange, searchTerm, amountMissi
         <div className="ingredientArea">
             {error && <div style={{ color: 'red' }}>Error: {error}</div>}
 
-            {Array.isArray(ingredients) && ingredients.length === 0 && <div>No records found.</div>}
+            {Array.isArray(ingredients) && ingredients.length === 0 && <div>No records found</div>}
 
             {Array.isArray(ingredients) && filteredIngredients.length === 0 && ingredients.length > 0 && (
-                <div>Keine Treffer.</div>
+                <div>Keine Treffer</div>
             )}
 
             {filteredIngredients.length > 0 && (
-                <ul className="ingredientList">
+                <ul className="ul ingredientList">
                     {filteredIngredients.map((element, idx) => {
                         const ingredientID = element.Ingredient_ID ?? (idx + 1);
                         const strId = `ingredient-${ingredientID}`;
                         return (
-                            <li key={ingredientID}>
+                            <li className="li" key={ingredientID}>
                                 <input
                                     type="checkbox"
+                                    className="checkbox"
                                     value={ingredientID}
                                     id={strId}
                                     checked={selectedIds.has(ingredientID)}
                                     onChange={() => toggleSelection(ingredientID)}
                                 />
-                                <label htmlFor={strId}>{element.Name ?? "Unnamed Ingredient"}</label>
+                                <label className="label" htmlFor={strId}>{element.Name ?? "Unnamed Ingredient"}</label>
                             </li>
                         );
                     })}

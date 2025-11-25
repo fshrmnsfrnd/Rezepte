@@ -52,39 +52,39 @@ export default function MyTimer({ expiryTimestamp }: { expiryTimestamp: Date }) 
 
     return (
         <div className="timer-inner">
-            <h3 className="timer-title">Timer</h3>
+            <h3 className="timer-title h3">Timer</h3>
             <div className="timer-display">
                 {/* Hours column */}
                 <div className="time-column">
-                    <button aria-label="add-hour" onClick={() => changeDuration(3600)} className="time-btn">+</button>
+                    <button className="button time-btn" aria-label="add-hour" onClick={() => changeDuration(3600)}>+</button>
                     <div className="time-value">{String(hours).padStart(2, '0')}</div>
-                    <button aria-label="sub-hour" onClick={() => changeDuration(-3600)} className="time-btn">-</button>
+                    <button className="button time-btn" aria-label="sub-hour" onClick={() => changeDuration(-3600)}>-</button>
                 </div>
 
                 <div className="time-sep">:</div>
 
                 {/* Minutes column */}
                 <div className="time-column">
-                    <button aria-label="add-minute" onClick={() => changeDuration(60)} className="time-btn">+</button>
+                    <button className="button time-btn" aria-label="add-minute" onClick={() => changeDuration(60)}>+</button>
                     <div className="time-value">{String(minutes).padStart(2, '0')}</div>
-                    <button aria-label="sub-minute" onClick={() => changeDuration(-60)} className="time-btn">-</button>
+                    <button className="button time-btn" aria-label="sub-minute" onClick={() => changeDuration(-60)}>-</button>
                 </div>
 
                 <div className="time-sep">:</div>
 
                 {/* Seconds column */}
                 <div className="time-column">
-                    <button aria-label="add-second" onClick={() => changeDuration(1)} className="time-btn">+</button>
+                    <button className="button time-btn" aria-label="add-second" onClick={() => changeDuration(1)}>+</button>
                     <div className="time-value">{String(seconds).padStart(2, '0')}</div>
-                    <button aria-label="sub-second" onClick={() => changeDuration(-1)} className="time-btn">-</button>
+                    <button className="button time-btn" aria-label="sub-second" onClick={() => changeDuration(-1)}>-</button>
                 </div>
             </div>
             <div className="timer-controls">
-                {!isRunning && <button onClick={start} className="control-action">Start</button>}
-                {isRunning && <button onClick={pause} className="control-action">Pause</button>}
+                {!isRunning && <button onClick={start} className="button control-action">Start</button>}
+                {isRunning && <button onClick={pause} className="button control-action">Pause</button>}
                 <button 
                     onClick={() => {applyNewDuration(0);}}
-                    className="control-action control-reset">
+                    className="button control-action control-reset">
                     Reset
                 </button>
             </div>

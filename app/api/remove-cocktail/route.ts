@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { removeCocktail } from "@/lib/dbUtils";
-import { authorize } from "@/lib/utils";
+import { authorize } from "@/tools/utils";
 
 export async function POST(req: NextRequest) {
 	// Authorization

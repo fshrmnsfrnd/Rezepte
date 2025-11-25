@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CocktailData, cocktailExists, removeCocktail, createCocktail } from '@/lib/dbUtils';
-import { authorize } from '@/lib/utils';
+import { authorize } from '@/tools/utils';
 
 export async function POST(req: NextRequest) {
     // Authorization

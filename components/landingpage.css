@@ -6,7 +6,37 @@
     margin: 5px;
 }
 
-li{
+.showArea {
+    width: 50vw;
+    box-sizing: border-box;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+}
+
+.showRow {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.showArea .h3 {
+    font-size: 1rem;
+    margin: 0;
+}
+
+.showArea.active {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.li{
     list-style-type: none;
 }
 
@@ -31,19 +61,50 @@ li{
     width: 100%;
 }
 
-button * {
+.button * {
     all: unset;
 }
 
-/* optional to add in future
-.cocktailArea{
-
-}
-
 .ingredientArea{
-    
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* center children horizontally */
+    justify-content: flex-start;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
 }
-*/
+
+.searchTextField{
+    margin-bottom: 12px;
+    margin-top: 5px;
+    align-self: center;
+    max-width: 640px;
+    box-sizing: border-box;
+}
+
+.centered-column{
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+}
+
+.centered-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+#amountOfMissingIngredients{
+    width: 6ch;
+    min-width: 3ch; 
+    text-align: center;
+}
+
+.upButton{
+    display: block; 
+    margin: 12px auto;
+}
 
 .prep-content {
     flex: 1 1 auto;
@@ -59,6 +120,17 @@ button * {
         box-sizing: border-box;
         padding: 8px;
     }
+
+    .showArea {
+        width: 50%;
+        max-width: 50vw;
+    }
+
+    .mainRow {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+    }
 }
 
 @media (orientation: portrait) {
@@ -68,16 +140,14 @@ button * {
         padding: 8px;
     }
 
-    /* Make text/number inputs easier to tap in portrait mode */
-    input[type="text"],
-    input[type="number"],
-    textarea,
-    select {
+    .input[type="text"],
+    .input[type="number"],
+    .textarea,
+    .select {
         font-size: 1.125rem;
         padding: 12px;
     }
 
-    /* Limit width inside display areas while keeping inputs centered */
     .displayArea input[type="text"],
     .displayArea input[type="number"],
     .displayArea textarea {
@@ -89,4 +159,9 @@ button * {
     .prep-timer-row {
         display: block;
     }
+
+    .displayArea[data-visible="false"] {
+        display: none;
+    }
 }
+
