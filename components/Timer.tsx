@@ -18,7 +18,6 @@ export default function MyTimer({ expiryTimestamp }: { expiryTimestamp: Date }) 
         isRunning,
         start,
         pause,
-        resume,
         restart,
     } = useTimer({ expiryTimestamp, onExpire: () => console.warn('onExpire called'), interval: 20, autoStart: false });
 
