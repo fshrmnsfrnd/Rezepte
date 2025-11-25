@@ -1,10 +1,12 @@
 #!/usr/bin/env node
+
+const dotenv = require('dotenv')
 const fs = require('fs');
 const path = require('path');
-const http = require('http');
 const projectRoot = path.resolve(__dirname, '..');
 const jsonDir = path.join(projectRoot, 'resources', 'json');
 
+dotenv.config()
 //check if important things exist
 if (!process.env.API_KEY) {
     console.warn('Hinweis: API_KEY not found in Environment');
@@ -16,7 +18,7 @@ if (!fs.existsSync(jsonDir)) {
 }
 
 // debounce map
-const recent = new Map();
+const recent = new Map<any, any>();
 
 function shouldEmit(key:string) {
     const now = Date.now();
@@ -24,7 +26,9 @@ function shouldEmit(key:string) {
     if (now - last < 200) return false;
     recent.set(key, now);
     if (recent.size > 1000) {
-        for (const [k, v] of recent) if (now - v > 1000) recent.delete(k);
+        recent.forEach((v, k) => {
+            if (now - v > 1000) recent.delete(k);
+        });
     }
     return true;
 }
@@ -55,7 +59,7 @@ async function postJsonToApi(jsonPath:string, attempt:number = 1) {
         const maxAttempts = 5;
         var res;
         try{
-            res = await fetch('/api/import-cocktail', {
+            res = await fetch('http://localhost:3000/api/import-cocktail', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'API_KEY': process.env.API_KEY ?? '' },
                 body: JSON.stringify(parsed),
@@ -64,6 +68,7 @@ async function postJsonToApi(jsonPath:string, attempt:number = 1) {
 
             //try again if not succesfull
             if(res.status != 201 && attempt <= maxAttempts){
+                console.error('fetch-error | API: import-cocktail | message: |' + res);
                 const delay = 200 * Math.pow(2, attempt);
                 setTimeout(() => postJsonToApi(jsonPath, attempt + 1), delay);
             }
@@ -84,7 +89,7 @@ async function postRemoveToApi(jsonPath: string, attempt = 1) {
     var res;
 
     try {
-        res = await fetch('/api/remove-cocktail', {
+        res = await fetch('http://localhost:3000/api/remove-cocktail', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'API_KEY': process.env.API_KEY ?? '' },
             body: JSON.stringify({ name }),
@@ -93,6 +98,7 @@ async function postRemoveToApi(jsonPath: string, attempt = 1) {
 
         //try again if not succesfull
         if (res.status != 200 && attempt <= maxAttempts) {
+            console.error('fetch-error | API: remove-cocktail | message: |' + res);
             const delay = 200 * Math.pow(2, attempt);
             setTimeout(() => postRemoveToApi(jsonPath, attempt + 1), delay);
         }
@@ -113,41 +119,21 @@ function initialPostAll() {
 }
 
 // wait for services and then start the watcher
-function waitForService(apiUrl: string, attempt = 1) {
-    const url = new URL(apiUrl);
-    const opts = {
-        hostname: url.hostname,
-        port: url.port || 80,
-        path: url.pathname || '/',
-        method: 'OPTIONS',
-        timeout: 2000,
-    };
+function waitForService(apiAddress: string, attempt = 1) {
+    const timeoutMs = 2000;
 
     return new Promise((resolve) => {
-        const tryOnce = () => {
-            const req = http.request(Object.assign({}, opts), (res: any) => {
-                console.log("[watch-json-importer]: service ready")
-                res.resume();
-                resolve(undefined);
-            });
-
-            req.on('timeout', () => {
-                req.destroy();
-            });
-
-            req.on('error', (err: any) => {
-                console.log("[watch-json-importer]: service error" + err.message)
-                const delay = Math.min(10000, 200 * Math.pow(2, Math.max(0, attempt - 1)));
-                setTimeout(() => {
-                    attempt++;
-                    tryOnce();
-                }, delay);
-            });
-
+        const tryOnce = async () => {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
             try {
-                req.end();
-            } catch (ex) {
-                console.log("[watch-json-importer]: service wait" + (ex instanceof Error ? ex.message : String(ex)));
+                const res = await fetch(apiAddress, { method: 'OPTIONS', signal: controller.signal as any });
+                clearTimeout(timer);
+                console.log('service ready');
+                resolve(undefined);
+            } catch (err: any) {
+                clearTimeout(timer);
+                console.log('service error: ' + (err && err.message ? err.message : String(err)));
                 const delay = Math.min(10000, 200 * Math.pow(2, Math.max(0, attempt - 1)));
                 setTimeout(() => {
                     attempt++;
@@ -161,11 +147,11 @@ function waitForService(apiUrl: string, attempt = 1) {
 }
 
 async function run() {
-    console.log("[watch-json-importer]: waiting for import API to be availible");
-    await waitForService('import-api');
+    console.log("waiting for import API to be availible");
+    await waitForService('http://localhost:3000/api/import-api');
 
-    console.log("[watch-json-importer]: waiting for remove API to be availible");
-    await waitForService('remove-api');
+    console.log("waiting for remove API to be availible");
+    await waitForService('http://localhost:3000/api/remove-api');
 
     // start processing files and watching
     initialPostAll();

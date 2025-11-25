@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently --kill-others \"npm:watch:resources\" \"npm:watch:json-import\" \"next dev\"",
+    "dev": "concurrently --kill-others \"next dev\" \"npm:watch:resources\" \"npm:watch:json-import\" ",
     "build": "next build",
-    "start": "concurrently --kill-others \"npm:watch:resources\" \"npm:watch:json-import\" \"next start\"",
+    "start": "concurrently --kill-others \"next start\" \"npm:watch:resources\" \"npm:watch:json-import\"",
     "lint": "eslint",
     "watch:resources": "node tools/watchMarkdown.js",
     "watch:json-import": "node tools/watch-json-importer.js"
   },
   "dependencies": {
+    "dotenv": "^17.2.3",
     "next": "16.0.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
