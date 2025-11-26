@@ -37,11 +37,11 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        const cocktailIds = new Array<number>;
+        const cocktailIds: number[] = new Array<number>;
 
         for (const [coId, caIds] of cocktailMap) {
             for (const currCaId of caIds) {
-                if (providedIds.includes(currCaId)) {
+                if (providedIds.includes(currCaId) ) {
                     cocktailIds.push(coId);
                 }
             }

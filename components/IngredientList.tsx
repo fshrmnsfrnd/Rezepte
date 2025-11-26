@@ -52,6 +52,10 @@ export default function IngredientList({ onFilterChange, searchTerm, amountMissi
             if (ct.includes("application/json")) data = await res.json();
             else data = await res.text();
 
+            if(selectedIds.size == 0 || selectedIds == null){
+                setIngredients(null)
+            }
+
             if (Array.isArray(data)) {
                 setIngredients(data as Ingredient[]);
             } else {
@@ -81,9 +85,10 @@ export default function IngredientList({ onFilterChange, searchTerm, amountMissi
             });
 
             const ct = res.headers.get('content-type') || '';
-            let data: any;
-            if (ct.includes('application/json')) data = await res.json();
-            else data = await res.text();
+            let data: any = null;
+            if (ct.includes('application/json')){ 
+                data = await res.json();
+            } 
 
             if (Array.isArray(data)) {
                 const ids = data.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n));

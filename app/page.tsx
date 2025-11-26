@@ -29,27 +29,43 @@ export default function Home() {
     };
 
     function handleFilterChange(ids: number[] | null, source: 'ingredients' | 'categories') {
-        // only update the corresponding source state here; derivation is handled by an effect
-        console.log(source + ' ->', ids);
-        if (source === 'ingredients') {
-            setIngFilteredIds(ids);
-            return;
+        if(source === 'ingredients'){
+            if(ids == null){
+                setIngFilteredIds(null);
+            }else if(ids.length === 0){
+                setIngFilteredIds([])
+            }else{
+                setIngFilteredIds(ids)
+            }
+            
+        }else if(source === 'categories'){
+            setCatFilteredIds(ids);
         }
-        setCatFilteredIds(ids);
+
+        console.log("----------------------------")
+        console.log("providedIDs: " + ids?.toString())
+        console.log("catIDs: " + catFilteredIds?.toString())
+        console.log("ingIDs: " + ingFilteredIds?.toString())
+        
+        //wenn ein oder beide filter nicht gesetzt sind
+        if(ingFilteredIds == undefined && catFilteredIds == undefined){
+            console.log("beide null")
+            setFilteredCocktailIds(null);
+        }else if(ingFilteredIds && !catFilteredIds){
+            console.log("Cats null")
+            setFilteredCocktailIds(ingFilteredIds);
+        }else if(!ingFilteredIds && catFilteredIds){
+            console.log("Ings null")
+            setFilteredCocktailIds(catFilteredIds);
+        }else{
+            console.log("both set")
+            const ingSet: Set<number> = new Set(ingFilteredIds);
+            const intersection: number[] = catFilteredIds?.filter(id => ingSet.has(id)) || [];
+            setFilteredCocktailIds(intersection);
+        }
+        console.log("outIds: " + filteredCocktailIds?.toString());
+        return;
     }
-
-    // Derive the final filter IDs to pass to AllCocktails
-    useEffect(() => {
-        const a = ingFilteredIds || [];
-        const b = catFilteredIds || [];
-        if (a.length === 0 && b.length === 0){setFilteredCocktailIds(null);return;}
-        if (a.length === 0){setFilteredCocktailIds(b);return;}
-        if (b.length === 0){setFilteredCocktailIds(a);return;}
-
-        const setA = new Set(a);
-        const intersection = b.filter(id => setA.has(id));
-        setFilteredCocktailIds(intersection);
-    }, [ingFilteredIds, catFilteredIds]);
     
     return (
         <div>
@@ -99,13 +115,13 @@ export default function Home() {
                                         <label className="label">Anzahl der Zutaten, die fehlen dürfen:</label>
                                         <div className="centered-row" style={{ gap: 8 }}>
                                             <button
-                                                id="decreaseAmount"
-                                                className="button"
-                                                type="button"
-                                                aria-label="Verringern"
-                                                onClick={decreaseAmount}
+                                            id="decreaseAmount"
+                                            className="button"
+                                            type="button"
+                                            aria-label="Verringern"
+                                            onClick={decreaseAmount}
                                             >
-                                                -
+                                            -
                                             </button>
                                             <input
                                                 id="amountOfMissingIngredients"

@@ -61,7 +61,7 @@ export default function AllCocktails({ filterIds, searchTerm}: Props) {
 
             {Array.isArray(visibleFiltered) && visibleFiltered.length === 0 && <div>No records found.</div>}
 
-            {Array.isArray(visibleFiltered) && visibleFiltered.length > 0 && (
+            {Array.isArray(visibleFiltered) /*&& visibleFiltered.length > 0*/ && (
                 <div id="cocktailList">
                     {visibleFiltered.map((element, idx) => {
                         const cocktailID = element.Cocktail_ID ?? (idx + 1);
