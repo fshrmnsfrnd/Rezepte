@@ -1,11 +1,17 @@
+#Docker Compose for testing
 services:
   cocktails:
     container_name: cocktails
-    image: fshrmnsfrnd/cocktails:latest
+    # Wenn Compose das Image selbst bauen soll, verwendet es die unten stehende Build-Definition.
+    # Das `image`-Feld wird als Tag für das gebaute Image verwendet.
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cocktails:local
     ports:
       - 3000:3000
     volumes:
-      - /path/to/md/recipes:/app/resources/Markdown
+      - ./resources/Markdown:/app/resources/Markdown
     environment:
       - EXT_API_KEY=Your_API_Key_Here
     restart: always

@@ -65,7 +65,6 @@ export default function Home() {
     return (
         <div>
             {/*Head of Page*/}
-            <button className="button" onClick={() => handleFilterChange([1, 2, 3], 'categories')}>test</button>
             <header className="header">
                 <a href="/"><h1 className="h1">Cocktails</h1></a>
                 <div className="showRow">

@@ -41,9 +41,10 @@ next-env.d.ts
 package-lock.json
 
 #database
-db.db
-/db.db
+#db.db
+#/db.db
 
-#local test reciepes
+#local tests
 /resources/json/*
 /resources/Markdown/*
+docker-compose.yml
