@@ -100,32 +100,32 @@ export function CocktailDetail() {
 
     return (
         <div>
-            <header>
-            <a href="/"><h1>Cocktails</h1></a>
+            <header className="header">
+            <a href="/"><h1 className="h1">Cocktails</h1></a>
             </header>
             <div className="details">
                 {loading && <div>Loading details…</div>}
                 {error && <div style={{ color: "red" }}>Error: {error}</div>}
                 {selected && (
                     <>
-                        <h2>{selected.name}</h2>
-                        <p>{selected.description}</p>
+                        <h2 className="h2">{selected.name}</h2>
+                        <p className="p">{selected.description}</p>
 
-                        <h3>Zutaten</h3>
+                        <h3 className="h3">Zutaten</h3>
 
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Menge</th>
-                                    <th>Zutat</th>
+                        <table className="table">
+                            <thead className="thead">
+                                <tr className="tr">
+                                    <th className="th">Menge</th>
+                                    <th className="th">Zutat</th>
                                 </tr>
                             </thead>
 
-                            <tbody>
+                            <tbody className="tbody">
                                 {selected.ingredients.map((i) => (
-                                    <tr key={i.id}>
-                                        <td>{i.amount} {i.unit}</td>
-                                        <td>{i.name}</td>
+                                    <tr key={i.id} className="tr">
+                                        <td className="td">{i.amount} {i.unit}</td>
+                                        <td className="td">{i.name}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -134,10 +134,10 @@ export function CocktailDetail() {
                         {selected.steps.length != 0 && (
                             <div className="prep-timer-row">
                                 <div className="prep-content">
-                                    <h3>Zubereitung</h3>
-                                    <ul>
+                                    <h3 className="h3">Zubereitung</h3>
+                                    <ul className="ul">
                                         {selected.steps.map((s) => (
-                                            <li key={s.id}>{s.number}. {s.description}</li>
+                                            <li key={s.id} className="li">{s.number}. {s.description}</li>
                                         ))}
                                     </ul>
                                 </div>
