@@ -7,5 +7,5 @@ services:
     volumes:
       - /path/to/md/recipes:/app/resources/Markdown
     environment:
-      - API_KEY=Your_API_Key_Here
+      - EXT_API_KEY=Your_API_Key_Here
     restart: always
