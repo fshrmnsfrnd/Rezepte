@@ -13,19 +13,19 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Expected an array of ingredient IDs' }, { status: 400 });
         }
 
-        //Get the Cocktails
+        //Get the Recipes
         const dbRes = await db.all(
-            `SELECT DISTINCT CI.Cocktail_ID
-            FROM Cocktail_Ingredient CI
-            WHERE CI.Ingredient_ID IN (${ids})
-            ORDER BY CI.Cocktail_ID;`,
+            `SELECT DISTINCT RI.Recipe_ID
+            FROM Recipe_Ingredient RI
+            WHERE RI.Ingredient_ID IN (${ids})
+            ORDER BY CI.Recipe_RD;`,
         );
 
-        const cocktailIds = Array.from(new Set(dbRes.map(row => row.Cocktail_ID)));
+        const recipeIds = Array.from(new Set(dbRes.map(row => row.Recipe_ID)));
 
-        return NextResponse.json(cocktailIds);
+        return NextResponse.json(recipeIds);
     } catch (ex) {
-        console.error('Error in cocktailsFilteredByMustHaveIngredients', ex);
+        console.error('Error in recipesFilteredByMustHaveIngredients', ex);
         return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 }

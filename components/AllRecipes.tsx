@@ -2,8 +2,8 @@
 import React, { useEffect, useState } from "react";
 import "./landingpage.css";
 
-type CocktailRow = {
-    Cocktail_ID?: number;
+type RecipeRow = {
+    Recipe_ID?: number;
     Name?: string;
     Description?: string;
 };
@@ -13,39 +13,39 @@ type Props = {
     searchTerm?: string | null;
 };
 
-export default function AllCocktails({ filterIds, searchTerm}: Props) {
-    const [cocktails, setCocktails] = useState<CocktailRow[] | null>(null);
+export default function AllRecipes({ filterIds, searchTerm}: Props) {
+    const [recipes, setRecipes] = useState<RecipeRow[] | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    async function loadCocktails(): Promise<void> {
+    async function loadRecipes(): Promise<void> {
         setError(null);
         try {
-            const res = await fetch('/api/cocktails');
+            const res = await fetch('/api/allRecipes');
             const ct = res.headers.get("content-type") || "";
             let data: any;
             data = await res.json();
 
             if (Array.isArray(data)) {
-                setCocktails(data as CocktailRow[]);
+                setRecipes(data as RecipeRow[]);
             } else {
-                setCocktails(null);
+                setRecipes(null);
                 setError(typeof data === 'string' ? data : 'Unexpected response');
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : String(err));
-            setCocktails(null);
+            setRecipes(null);
         }
     }
     
-    useEffect(() => { loadCocktails(); }, []);
+    useEffect(() => { loadRecipes(); }, []);
     
     let visible;
-    if (Array.isArray(cocktails)){
+    if (Array.isArray(recipes)){
         //if null show all, else show filtered
         if (filterIds == null){
-                visible = cocktails;
+            visible = recipes;
         }else{
-            visible = cocktails.filter(c => filterIds.includes(c.Cocktail_ID as number))
+            visible = recipes.filter(r => filterIds.includes(r.Recipe_ID as number))
         }
     }
 
@@ -57,21 +57,21 @@ export default function AllCocktails({ filterIds, searchTerm}: Props) {
     }): visible): null;
 
     return (
-        <div className="cocktailArea">
+        <div className="recipeArea">
             {error && <div style={{ color: 'red' }}>Error: {error}</div>}
 
             {Array.isArray(visibleFiltered) && visibleFiltered.length === 0 && <div>No records found.</div>}
 
             {Array.isArray(visibleFiltered)&& (
-                <div id="cocktailList">
+                <div id="recipeList">
                     {visibleFiltered.map((element, idx) => {
-                        const cocktailID = element.Cocktail_ID ?? (idx + 1);
+                        const recipeID = element.Recipe_ID ?? (idx + 1);
                         return (
                             <div
-                                className="cocktailPreview"
-                                onClick={() => { window.location = `/recipe?cocktailID=${cocktailID}` as string & Location; }}
+                                className="recipePreview"
+                                onClick={() => { window.location = `/recipe?recipeID=${recipeID}` as string & Location; }}
                                 role="button"
-                                key={cocktailID}
+                                key={recipeID}
                             >
                                 <h3 className="h3">{element.Name}</h3>
                                 <p className="p">{element.Description}</p>

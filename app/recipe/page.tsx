@@ -18,15 +18,15 @@ type Selected = {
     steps: Step[];
 };
 
-export default function CocktailWrapper(){
+export default function RecipeWrapper(){
     return(
-        <Suspense fallback={<div>Loading cocktail details…</div>}>
-            <CocktailDetail />
+        <Suspense fallback={<div>Loading Recipe details…</div>}>
+            <RecipeDetail />
         </Suspense>
     )
 }
 
-export function CocktailDetail() {
+export function RecipeDetail() {
     const [error, setError] = useState<string | null>(null);
     const [selected, setSelected] = useState<Selected | null>(null);
     const [loading, setLoading] = useState(false);
@@ -34,7 +34,7 @@ export function CocktailDetail() {
     const params = useSearchParams()
     useEffect(() => {
         console.log("Params:", params);
-        setId(params.get("cocktailID") ? parseInt(params.get("cocktailID")!, 10) : null);
+        setId(params.get("recipeID") ? parseInt(params.get("recipeID")!, 10) : null);
     }, [params]);
     useEffect(() => {
         if (id == null) {
@@ -49,7 +49,7 @@ export function CocktailDetail() {
             setLoading(true);
             setError(null);
             try {
-                const res = await fetch('/api/cocktail', {
+                const res = await fetch('/api/allRecipes', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: id}),
@@ -59,13 +59,13 @@ export function CocktailDetail() {
 
                 if (cancelled) return;
 
-                if (!data || !data.cocktail_id) {
+                if (!data || !data.recipe_id) {
                     setSelected({ name: "Not Found", description: "", ingredients: [], steps: [] });
                     return;
                 }
 
-                const name: string = data.cocktail_name ?? data.Name ?? "";
-                const description: string = data.cocktail_description ?? data.Description ?? "";
+                const name: string = data.recipe_name ?? data.Name ?? "";
+                const description: string = data.recipe_description ?? data.Description ?? "";
 
                 const ingredients: Ingredient[] = (data.ingredients || []).map((ing: any, idx: number) => ({
                     id: idx,
@@ -101,7 +101,7 @@ export function CocktailDetail() {
     return (
         <div>
             <header className="header">
-            <a href="/"><h1 className="h1">Cocktails</h1></a>
+            <a href="/"><h1 className="h1">Rezepte</h1></a>
             </header>
             <div className="details">
                 {loading && <div>Loading details…</div>}

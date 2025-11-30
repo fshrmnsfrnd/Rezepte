@@ -12,15 +12,15 @@ export type StepIn = {
     instruction: string;
 };
 
-export async function importCocktail(payload: any) {
-    const name = payload.cocktail_name || payload.name || null;
-    const description = payload.cocktail_description || payload.description || null;
+export async function importRecipe(payload: any) {
+    const name = payload.recipe_name || payload.name || null;
+    const description = payload.recipe_description || payload.description || null;
     const ingredients: IngredientIn[] = payload.ingredients || [];
     const steps: StepIn[] = payload.steps || [];
     const apiKey = process.env.API_KEY;
 
     if (!name) {
-        throw { status: 400, message: 'Missing cocktail name' };
+        throw { status: 400, message: 'Missing recipe name' };
     }
 
     if (!Array.isArray(ingredients) || ingredients.length === 0) {
@@ -28,7 +28,7 @@ export async function importCocktail(payload: any) {
     }
 
     await db.exec('BEGIN TRANSACTION;');
-    //Check if Cocktail already exists
+    //Check if Recipe already exists
     try {
         let existingId: number | null = null;
         try {
@@ -39,63 +39,63 @@ export async function importCocktail(payload: any) {
                 headers['API_KEY'] = apiKey;
             }
 
-            const resp = await fetch('/api/cocktail-exists', {
+            const resp = await fetch('/api/recipe-exists', {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({ cocktail_name: name }),
+                body: JSON.stringify({ recipe_name: name }),
             });
 
             if (resp.ok) {
                 const json = await resp.json();
-                if (json && json.exists && json.cocktail_id) {
-                    existingId = Number(json.cocktail_id) || null;
+                if (json && json.exists && json.recipe_id) {
+                    existingId = Number(json.recipe_id) || null;
                 }
             } else {
-                console.warn('cocktail-exists API returned non-OK:', resp.status);
+                console.warn('recipe-exists API returned non-OK:', resp.status);
                 await db.exec('ROLLBACK;');
                 return;
             }
         } catch (apiErr) {
-            console.warn('cocktail-exists API call failed, falling back to DB check', apiErr);
+            console.warn('recipe-exists API call failed, falling back to DB check', apiErr);
             await db.exec('ROLLBACK;');
             return;
         }
 
-        //If cocktail exists: Remove it and clean up the other Tables
+        //If recipe exists: Remove it and clean up the other Tables
         if (existingId) {
             const idNum = Number(existingId);
             try {
                 const headers: Record<string, string> = { 'Content-Type': 'application/json' };
                 if (apiKey != null) headers['API_KEY'] = String(apiKey);
 
-                const resp = await fetch('/api/remove-cocktail', {
+                const resp = await fetch('/api/remove-recipe', {
                     method: 'POST',
                     headers,
-                    body: JSON.stringify({ cocktail_id: idNum }),
+                    body: JSON.stringify({ recipe_id: idNum }),
                 });
 
                 if (resp.ok) {
                     const jr = await resp.json().catch(() => null);
                     if (!(!jr || (jr && !jr.error))) {
-                        console.warn('remove-cocktail API returned error payload', jr);
+                        console.warn('remove-recipe API returned error payload', jr);
                         await db.exec('ROLLBACK;');
                         return;
                     }
                 } else {
-                    console.warn('remove-cocktail API returned non-OK:', resp.status);
+                    console.warn('remove-recipe API returned non-OK:', resp.status);
                     await db.exec('ROLLBACK;');
                     return;
                 }
             } catch (apiErr) {
-                console.warn('remove-cocktail API call failed, falling back to DB deletes', apiErr);
+                console.warn('remove-recipe API call failed, falling back to DB deletes', apiErr);
                 await db.exec('ROLLBACK;');
                 return;
             }
         }
 
         
-        const res = await db.run(`INSERT INTO Cocktail (Name, Description) VALUES (?, ?)`, [name, description]);
-        const cocktailId = res.lastID as number;
+        const res = await db.run(`INSERT INTO Recipe (Name, Description) VALUES (?, ?)`, [name, description]);
+        const recipeId = res.lastID as number;
 
         for (const ing of ingredients) {
             const ingName = (ing.ingredient_name || '').trim();
@@ -110,8 +110,8 @@ export async function importCocktail(payload: any) {
             }
 
             await db.run(
-                `INSERT INTO Cocktail_Ingredient (Cocktail_ID, Ingredient_ID, Amount, Unit, Optional) VALUES (?, ?, ?, ?, ?)`,
-                [cocktailId, ingredientId, ing.amount ?? null, ing.unit ?? null, ing.optional ? 1 : 0]
+                `INSERT INTO Recipe_Ingredient (Recipe_ID, Ingredient_ID, Amount, Unit, Optional) VALUES (?, ?, ?, ?, ?)`,
+                [recipeId, ingredientId, ing.amount ?? null, ing.unit ?? null, ing.optional ? 1 : 0]
             );
         }
 
@@ -119,7 +119,7 @@ export async function importCocktail(payload: any) {
             for (const s of steps) {
                 const num = Number(s.step_number) || null;
                 const instr = (s.instruction || '').toString();
-                await db.run(`INSERT INTO Step (Cocktail_ID, Number, Description) VALUES (?, ?, ?)`, [cocktailId, num, instr]);
+                await db.run(`INSERT INTO Step (Recipe_ID, Number, Description) VALUES (?, ?, ?)`, [recipeId, num, instr]);
             }
         }
 
@@ -139,13 +139,13 @@ export async function importCocktail(payload: any) {
                         categoryId = rc.lastID as number;
                     }
 
-                    // link cocktail <-> category
-                    await db.run(`INSERT INTO Cocktail_Category (Cocktail_ID, Category_ID) VALUES (?, ?)`, [cocktailId, categoryId]);
+                    // link recipe <-> category
+                    await db.run(`INSERT INTO Recipe_Category (Recipe_ID, Category_ID) VALUES (?, ?)`, [recipeId, categoryId]);
                 }
             }
 
         await db.exec('COMMIT;');
-        return { cocktail_id: cocktailId };
+        return { recipe_id: recipeId };
     } catch (err) {
         await db.exec('ROLLBACK;');
         console.error('import error', err);

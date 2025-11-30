@@ -3,19 +3,13 @@ import { db } from "@/lib/db";
 
 export async function GET(request: Request) {
     const sql = `
-        SELECT DISTINCT ca.Category_ID, ca.Name
-        FROM Category ca
-        JOIN Cocktail_Category cc
-            ON ca.Category_ID = cc.Category_ID
-        ORDER BY ca.Name ASC;
+        SELECT DISTINCT c.Category_ID, c.Name
+        FROM Category c
+        JOIN Recipe_Category rc
+            ON c.Category_ID = rc.Category_ID
+        ORDER BY c.Name ASC;
     `;
     
     const categories = await db.all(sql);
     return NextResponse.json(categories);
-} `
-        SELECT DISTINCT ca.Category_ID, ca.Name
-        FROM Category ca
-        JOIN Cocktail_Category cc
-            ON ca.Category_ID = cc.Category_ID
-        ORDER BY ca.Name ASC;
-    `
+}

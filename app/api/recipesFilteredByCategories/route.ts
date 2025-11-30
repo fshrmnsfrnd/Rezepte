@@ -18,38 +18,38 @@ export async function POST(req: NextRequest) {
             .map((v: any) => { const n = Number(v); return Number.isFinite(n) ? Math.trunc(n) : null; })
             .filter((v: number | null) => v !== null)));
 
-        //Get the Cocktails
+        //Get the Recipe
         const dbRes = await db.all(`
-            SELECT cc.Cocktail_ID, cc.Category_ID
-            FROM Cocktail_Category cc
-            ORDER BY cc.Cocktail_ID;
+            SELECT RC.Recipe_ID, RC.Category_ID
+            FROM Recipe_Category RC
+            ORDER BY RC.Recipe_ID;
         `);
 
-        let cocktailMap = new Map<number, number[]>();
+        let recipeMap = new Map<number, number[]>();
 
         for (const row of dbRes) {
-            const currCoID = Number(row.Cocktail_ID);
-            const currCaID = Number(row.Category_ID);
-            if(cocktailMap.has(currCoID)){
-                cocktailMap.get(currCoID)?.push(currCaID);
+            const currRID = Number(row.Recipe_ID);
+            const currCID = Number(row.Category_ID);
+            if (recipeMap.has(currRID)){
+                recipeMap.get(currCID)?.push(currCID);
             }else{
-                cocktailMap.set(currCoID, [currCaID]);
+                recipeMap.set(currRID, [currCID]);
             }
         }
 
-        const cocktailIds: number[] = new Array<number>;
+        const recipeIds: number[] = new Array<number>;
 
-        for (const [coId, caIds] of cocktailMap) {
-            for (const currCaId of caIds) {
-                if (providedIds.includes(currCaId) ) {
-                    cocktailIds.push(coId);
+        for (const [rId, caIds] of recipeMap) {
+            for (const currCId of caIds) {
+                if (providedIds.includes(currCId) ) {
+                    recipeIds.push(rId);
                 }
             }
         }
 
-        return NextResponse.json(cocktailIds);
+        return NextResponse.json(recipeIds);
     } catch (ex) {
-        console.error('Error in cocktailsFilteredByCocktails', ex);
+        console.error('Error in recipesFilteredByCategorys', ex);
         return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 }

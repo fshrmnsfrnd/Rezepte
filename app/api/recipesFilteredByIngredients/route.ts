@@ -25,29 +25,29 @@ export async function POST(req: NextRequest) {
             acceptMissingIngredients = Number.isFinite(n) && n >= 0 ? Math.trunc(n) : 0;
         }
 
-        //Get the Cocktails
+        //Get the recipe
         const dbRes = await db.all(`
-            SELECT CI.Cocktail_ID, CI.Ingredient_ID
-            FROM Cocktail_Ingredient CI
-            WHERE CI.Optional = 0
-            ORDER BY CI.Cocktail_ID;
+            SELECT RI.Recipe_ID, RI.Ingredient_ID
+            FROM Recipe_Ingredient RI
+            WHERE RI.Optional = 0
+            ORDER BY RI.Recipe_ID;
         `);
 
-        let cocktailMap = new Map<number, number[]>();
+        let recipeMap = new Map<number, number[]>();
 
         for (const row of dbRes) {
-            const currCID = Number(row.Cocktail_ID);
+            const currRID = Number(row.Recipe_ID);
             const currIID = Number(row.Ingredient_ID);
-            if(cocktailMap.has(currCID)){
-                cocktailMap.get(currCID)?.push(currIID);
+            if (recipeMap.has(currRID)){
+                recipeMap.get(currRID)?.push(currIID);
             }else{
-                cocktailMap.set(currCID, [currIID]);
+                recipeMap.set(currRID, [currIID]);
             }
         }
 
-        const cocktailIds = new Array<number>;
+        const recipeIds = new Array<number>;
 
-        for (const [cid, iids] of cocktailMap) {
+        for (const [cid, iids] of recipeMap) {
             let ingredientsNotProvided: number = 0;
             for (const iid of iids) {
                 if (!providedIds.includes(iid)) {
@@ -55,13 +55,13 @@ export async function POST(req: NextRequest) {
                 }
             }
             if (ingredientsNotProvided <= acceptMissingIngredients) {
-                cocktailIds.push(cid);
+                recipeIds.push(cid);
             }
         }
 
-        return NextResponse.json(cocktailIds);
+        return NextResponse.json(recipeIds);
     } catch (ex) {
-        console.error('Error in cocktailsFilteredByIngredients', ex);
+        console.error('Error in recipesFilteredByIngredients', ex);
         return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 }

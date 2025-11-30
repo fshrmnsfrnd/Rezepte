@@ -9,21 +9,21 @@ export async function POST(req: NextRequest) {
     const id: number = parseInt(body.id, 10);
     if (!id) return NextResponse.json({ error: "Missing id query parameter" }, { status: 400 });
 
-    // load cocktail
-    const cocktail = await db.get(
-        `SELECT Cocktail_ID AS cocktail_id, Name AS cocktail_name, Description AS cocktail_description
-         FROM Cocktail WHERE Cocktail_ID = ?`,
+    // load recipe
+    const recipe = await db.get(
+        `SELECT Recipe_ID AS recipe_id, Name AS recipe_name, Description AS recipe_description
+         FROM Recipe WHERE Recipe_ID = ?`,
         [id]
     );
 
-    if (!cocktail) return NextResponse.json({ error: "Cocktail not found" }, { status: 404 });
+    if (!recipe) return NextResponse.json({ error: "Recipe not found" }, { status: 404 });
 
     // load ingredients
     const ingredientsRows = await db.all(
-        `SELECT Ingredient.Name AS ingredient_name, CI.Amount AS amount, CI.Unit AS unit, CI.Optional AS optional
-         FROM Cocktail_Ingredient AS CI
-         JOIN Ingredient ON Ingredient.Ingredient_ID = CI.Ingredient_ID
-         WHERE CI.Cocktail_ID = ?`,
+        `SELECT Ingredient.Name AS ingredient_name, RI.Amount AS amount, RI.Unit AS unit, RI.Optional AS optional
+         FROM Recipe_Ingredient AS RI
+         JOIN Ingredient ON Ingredient.Ingredient_ID = RI.Ingredient_ID
+         WHERE RI.Recipe_ID = ?`,
         [id]
     );
 
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     const stepsRows = await db.all(
         `SELECT Number AS step_number, Description AS instruction
          FROM Step
-         WHERE Cocktail_ID = ?
+         WHERE Recipe_ID = ?
          ORDER BY Number ASC`,
         [id]
     );
@@ -49,9 +49,9 @@ export async function POST(req: NextRequest) {
     }));
 
     return NextResponse.json({
-        cocktail_id: cocktail.cocktail_id,
-        cocktail_name: cocktail.cocktail_name,
-        cocktail_description: cocktail.cocktail_description,
+        recipe_id: recipe.recipe_id,
+        recipe_name: recipe.recipe_name,
+        recipe_description: recipe.recipe_description,
         ingredients,
         steps
     });
