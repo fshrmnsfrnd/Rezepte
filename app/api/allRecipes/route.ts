@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { getAllRecipes } from '@/lib/dbUtils';
 
 export async function GET() {
-    const recipes = await db.all("SELECT Recipe_ID, Name, Description FROM Recipe ORDER BY Name");
-    return NextResponse.json(recipes)
+    const recipes = await getAllRecipes();
+    return NextResponse.json(recipes);
 }

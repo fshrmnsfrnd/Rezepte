@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { filterRecipesByIngredients } from '@/lib/dbUtils';
 
 export async function POST(req: NextRequest) {
     // No Authorization because it doesnt write on the Server and Database
-    
     try {
-        //Get Param
         const body = await req.json();
         const ids = Array.isArray(body) ? body : body?.ids;
-
         if (!Array.isArray(ids)) {
             return NextResponse.json({ error: 'Expected an array of ingredient IDs' }, { status: 400 });
         }
@@ -16,8 +13,7 @@ export async function POST(req: NextRequest) {
         const providedIds = Array.from(new Set(ids
             .map((v: any) => { const n = Number(v); return Number.isFinite(n) ? Math.trunc(n) : null; })
             .filter((v: number | null) => v !== null)));
-        
-        // Read allowed missing ingredients from the request body (defaults to 0)
+
         const rawAllowedMissing = body?.amountMissingIngredients;
         let acceptMissingIngredients = 0;
         if (rawAllowedMissing != null) {
@@ -25,40 +21,7 @@ export async function POST(req: NextRequest) {
             acceptMissingIngredients = Number.isFinite(n) && n >= 0 ? Math.trunc(n) : 0;
         }
 
-        //Get the recipe
-        const dbRes = await db.all(`
-            SELECT RI.Recipe_ID, RI.Ingredient_ID
-            FROM Recipe_Ingredient RI
-            WHERE RI.Optional = 0
-            ORDER BY RI.Recipe_ID;
-        `);
-
-        let recipeMap = new Map<number, number[]>();
-
-        for (const row of dbRes) {
-            const currRID = Number(row.Recipe_ID);
-            const currIID = Number(row.Ingredient_ID);
-            if (recipeMap.has(currRID)){
-                recipeMap.get(currRID)?.push(currIID);
-            }else{
-                recipeMap.set(currRID, [currIID]);
-            }
-        }
-
-        const recipeIds = new Array<number>;
-
-        for (const [cid, iids] of recipeMap) {
-            let ingredientsNotProvided: number = 0;
-            for (const iid of iids) {
-                if (!providedIds.includes(iid)) {
-                    ingredientsNotProvided += 1;
-                }
-            }
-            if (ingredientsNotProvided <= acceptMissingIngredients) {
-                recipeIds.push(cid);
-            }
-        }
-
+        const recipeIds = await filterRecipesByIngredients(providedIds, acceptMissingIngredients);
         return NextResponse.json(recipeIds);
     } catch (ex) {
         console.error('Error in recipesFilteredByIngredients', ex);
