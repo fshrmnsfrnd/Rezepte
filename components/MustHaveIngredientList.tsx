@@ -9,7 +9,7 @@ type Ingredient = {
 
 type Props = {
     // callback will be invoked with (ids, source).
-    onFilterChange?: (cocktailIds: number[] | null, source: 'ingredients' | 'categories' | 'mustHaveIngredients') => void;
+    onFilterChange?: (recipeIds: number[] | null, source: 'ingredients' | 'categories' | 'mustHaveIngredients') => void;
     searchTerm?: string | null;
 };
 
@@ -43,7 +43,7 @@ export default function CategoryList({ onFilterChange, searchTerm}: Props) {
         }
     }
 
-    async function loadCocktails(): Promise<void> {
+    async function loadRecipes(): Promise<void> {
         setError(null);
         try {
             const res = await fetch("/api/ingredients");
@@ -64,7 +64,7 @@ export default function CategoryList({ onFilterChange, searchTerm}: Props) {
         }
     }
 
-    useEffect(() => { loadCocktails(); }, []);
+    useEffect(() => { loadRecipes(); }, []);
 
     async function updateFilterFromSelection(newSelected: number[]) {
         // no selection => show all
@@ -74,7 +74,7 @@ export default function CategoryList({ onFilterChange, searchTerm}: Props) {
         }
 
         try {
-            const res = await fetch('/api/cocktailsFilteredByMustHaveIngredients',  { 
+            const res = await fetch('/api/recipesFilteredByMustHaveIngredients',  { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ids: newSelected}),

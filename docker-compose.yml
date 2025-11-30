@@ -1,11 +1,11 @@
 #Docker Compose for testing
 services:
-  cocktails:
-    container_name: cocktails
+  recipes:
+    container_name: recipes
     build:
       context: .
       dockerfile: Dockerfile
-    image: cocktails:local
+    image: recipes:local
     ports:
       - 3000:3000
     volumes:

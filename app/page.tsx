@@ -1,5 +1,5 @@
 'use client'
-import AllCocktails from "@/components/AllCocktails";
+import AllRecipes from "@/components/AllRecipes";
 import IngredientList from "@/components/IngredientList";
 import CategoryList from "@/components/CategoryList";
 import MustHaveIngredientList from "@/components/MustHaveIngredientList";
@@ -13,14 +13,14 @@ import {
 import { getIntersection } from "@/tools/utils";
 
 export default function Home() {
-    const [filteredCocktailIds, setFilteredCocktailIds] = useState<number[] | null>(null);
+    const [filteredRecipeIds, setFilteredRecipeIds] = useState<number[] | null>(null);
     const [ingFilteredIds, setIngFilteredIds] = useState<number[] | null>(null); //RecipeID filtered by Ingredient
     const [catFilteredIds, setCatFilteredIds] = useState<number[] | null>(null); //RecipeID filtered by Category
     const [mustHaveIngsFilteredIds, setMustHaveIngsFilteredIds] = useState<number[] | null>(null); //RecipeID filtered by Category
-    const [selectedPanel, setSelectedPanel] = useState<'cocktails' | 'ingredients'>('cocktails');
+    const [selectedPanel, setSelectedPanel] = useState<'recipes' | 'ingredients'>('recipes');
     const [ingredientSearch, setIngredientSearch] = useState<string>("");
     const [categorySearch, setCategorySearch] = useState<string>("");
-    const [cocktailSearch, setCocktailSearch] = useState<string>("");
+    const [recipeSearch, setRecipeSearch] = useState<string>("");
     const [mustHaveIngredientSearch, setMustHaveIngredientSearch] = useState<string>("");
     const [missingAmount, setMissingAmount] = useState<number>();
 
@@ -51,7 +51,7 @@ export default function Home() {
 
         //If none is set show all
         if (nextIng === null && nextCat === null && nextMustHaveIng === null) {
-            setFilteredCocktailIds(null);
+            setFilteredRecipeIds(null);
             return;
         }
 
@@ -61,7 +61,7 @@ export default function Home() {
             ...(nextCat ? [nextCat] : []),
             ...(nextMustHaveIng ? [nextMustHaveIng] : [])
         );
-        setFilteredCocktailIds(intersection);
+        setFilteredRecipeIds(intersection);
         return;
     }
     
@@ -69,7 +69,7 @@ export default function Home() {
         <div>
             {/*Head of Page*/}
             <header className="header">
-                <a href="/"><h1 className="h1">Cocktails</h1></a>
+                <a href="/"><h1 className="h1">Recipes</h1></a>
                 <div className="showRow">
                     <div
                         role="button"
@@ -80,10 +80,10 @@ export default function Home() {
                     </div>
                     <div
                         role="button"
-                        className={`showArea ${selectedPanel === 'cocktails' ? 'active' : ''}`}
-                        onClick={() => setSelectedPanel('cocktails')}
+                        className={`showArea ${selectedPanel === 'recipes' ? 'active' : ''}`}
+                        onClick={() => setSelectedPanel('recipes')}
                     >
-                        <h3 className="h3">Cocktails</h3>
+                        <h3 className="h3">Recipes</h3>
                     </div>
                 </div>
             </header>
@@ -146,7 +146,6 @@ export default function Home() {
 
                                     {/*The List of Ingredients */}
                                     <IngredientList onFilterChange={handleFilterChange} searchTerm={ingredientSearch} amountMissingIngredients={missingAmount} />
-                                    <button className="button upButton"><a href="#">Nach oben</a></button>
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
@@ -168,7 +167,6 @@ export default function Home() {
 
                                     {/*The List of Categories */}
                                     <CategoryList onFilterChange={handleFilterChange} searchTerm={categorySearch} />
-                                    <button className="button upButton"><a href="#">Nach oben</a></button>
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
@@ -190,27 +188,27 @@ export default function Home() {
 
                                     {/*The List of Categories */}
                                     <MustHaveIngredientList onFilterChange={handleFilterChange} searchTerm={mustHaveIngredientSearch} />
-                                    <button className="button upButton"><a href="#">Nach oben</a></button>
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
                     </Accordion>
+                    <button className="button upButton"><a href="#">Nach oben</a></button>
                 </div>
 
-                {/*Right Side with the List of Cocktails */}
-                <div className="displayArea rightArea" data-visible={selectedPanel === 'cocktails' ? 'true' : 'false'}>
+                {/*Right Side with the List of Recipes */}
+                <div className="displayArea rightArea" data-visible={selectedPanel === 'recipes' ? 'true' : 'false'}>
                     <div style={{ marginBottom: 12, justifySelf: 'center' }}>
                         <input
-                            id="cocktail-search"
+                            id="recipe-search"
                             className="input searchTextField"
                             type="text"
                             placeholder="Suchbegriff..."
-                            value={cocktailSearch}
-                            onChange={(e) => setCocktailSearch(e.target.value)}
-                            aria-label="Suche Cocktails"
+                            value={recipeSearch}
+                            onChange={(e) => setRecipeSearch(e.target.value)}
+                            aria-label="Suche Rezepte"
                         />
                     </div>
-                    <AllCocktails filterIds={filteredCocktailIds} searchTerm={cocktailSearch} />
+                    <AllRecipes filterIds={filteredRecipeIds} searchTerm={recipeSearch} />
                     <button className="button upButton"><a href="#">Nach oben</a></button>
                 </div>
             </div>

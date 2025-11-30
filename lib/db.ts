@@ -10,18 +10,18 @@ export const db = await open({
 });
 
 await db.exec(`
-    CREATE TABLE IF NOT EXISTS Cocktail (
-        Cocktail_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CREATE TABLE IF NOT EXISTS Recipe (
+        Recipe_ID INTEGER PRIMARY KEY AUTOINCREMENT,
         Name TEXT,
         Description TEXT
     );
 
     CREATE TABLE IF NOT EXISTS Step (
         Step_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-        Cocktail_ID INTEGER,
+        Recipe_ID INTEGER,
         Number INTEGER,
         Description TEXT,
-        FOREIGN KEY (Cocktail_ID) REFERENCES Cocktail(Cocktail_ID)
+        FOREIGN KEY (Recipe_ID) REFERENCES Recipe(Recipe_ID)
     );
 
     CREATE TABLE IF NOT EXISTS Ingredient (
@@ -29,13 +29,13 @@ await db.exec(`
         Name TEXT
     );
 
-    CREATE TABLE IF NOT EXISTS Cocktail_Ingredient (
-        Cocktail_ID INTEGER,
+    CREATE TABLE IF NOT EXISTS Recipe_Ingredient (
+        Recipe_ID INTEGER,
         Ingredient_ID INTEGER,
         Amount DECIMAL,
         Unit TEXT,
         Optional BOOLEAN,
-        FOREIGN KEY (Cocktail_ID) REFERENCES Cocktail(Cocktail_ID),
+        FOREIGN KEY (Recipe_ID) REFERENCES Recipe(Recipe_ID),
         FOREIGN KEY (Ingredient_ID) REFERENCES Ingredient(Ingredient_ID)
     );
 
@@ -44,10 +44,10 @@ await db.exec(`
         Name TEXT
     );
 
-    CREATE TABLE IF NOT EXISTS Cocktail_Category (
-        Cocktail_ID INTEGER,
+    CREATE TABLE IF NOT EXISTS Recipe_Category (
+        Recipe_ID INTEGER,
         Category_ID INTEGER,
-        FOREIGN KEY (Cocktail_ID) REFERENCES Cocktail(Cocktail_ID),
+        FOREIGN KEY (Recipe_ID) REFERENCES Recipe(Recipe_ID),
         FOREIGN KEY (Category_ID) REFERENCES Category(Category_ID)
     );
 `);

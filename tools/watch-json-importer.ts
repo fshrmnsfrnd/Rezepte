@@ -59,7 +59,7 @@ async function postJsonToApi(jsonPath:string, attempt:number = 1) {
         const maxAttempts = 7;
         var res;
         try {
-            res = await fetch('http://localhost:3000/api/import-cocktail', {
+            res = await fetch('http://localhost:3000/api/import-recipe', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'API_KEY': process.env.API_KEY ?? '' },
                 body: JSON.stringify(parsed),
@@ -75,12 +75,12 @@ async function postJsonToApi(jsonPath:string, attempt:number = 1) {
 
             // try again if not successful
             if (res.status !== 201 && attempt <= maxAttempts) {
-                console.error('fetch-error | API: import-cocktail | status: ' + res.status + ' | message: |' + bodyText);
+                console.error('fetch-error | API: import-recipe | status: ' + res.status + ' | message: |' + bodyText);
                 const delay = 2000 * Math.pow(2, attempt);
                 setTimeout(() => postJsonToApi(jsonPath, attempt + 1), delay);
             }
         } catch (ex) {
-            console.error('fetch-error | API: import-cocktail | message: |' + (ex instanceof Error ? ex.message : String(ex)));
+            console.error('fetch-error | API: import-recipe | message: |' + (ex instanceof Error ? ex.message : String(ex)));
         }
 
     } catch (ex) {
@@ -96,7 +96,7 @@ async function postRemoveToApi(jsonPath: string, attempt = 1) {
     var res;
 
     try {
-        res = await fetch('http://localhost:3000/api/remove-cocktail', {
+        res = await fetch('http://localhost:3000/api/remove-recipe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'API_KEY': process.env.API_KEY ?? '' },
             body: JSON.stringify({ name }),
@@ -111,12 +111,12 @@ async function postRemoveToApi(jsonPath: string, attempt = 1) {
 
         // try again if not successful
         if (res.status !== 200 && attempt <= maxAttempts) {
-            console.error('fetch-error | API: remove-cocktail | status: ' + res.status + ' | message: |' + bodyText);
+            console.error('fetch-error | API: remove-recipe | status: ' + res.status + ' | message: |' + bodyText);
             const delay = 200 * Math.pow(2, attempt);
             setTimeout(() => postRemoveToApi(jsonPath, attempt + 1), delay);
         }
     } catch (ex) {
-        console.error('fetch-error | API: remove-cocktail | message: |' + (ex instanceof Error ? ex.message : String(ex)));
+        console.error('fetch-error | API: remove-recipe | message: |' + (ex instanceof Error ? ex.message : String(ex)));
     }
 }
 
@@ -162,10 +162,10 @@ function waitForService(apiAddress: string, attempt = 1) {
 async function run() {
     console.log("waiting for import API to be availible");
     // Check the actual API endpoints used by the app
-    await waitForService('http://localhost:3000/api/import-cocktail');
+    await waitForService('http://localhost:3000/api/import-recipe');
 
     console.log("waiting for remove API to be availible");
-    await waitForService('http://localhost:3000/api/remove-cocktail');
+    await waitForService('http://localhost:3000/api/remove-recipe');
 
     // start processing files and watching
     initialPostAll();
@@ -180,7 +180,7 @@ async function run() {
             if (err) {
                 if (err.code === 'ENOENT') {
                     console.error('removed | path: ' + path.relative(projectRoot, full));
-                    // attempt to notify API to remove the cocktail corresponding to this file
+                    // attempt to notify API to remove the recipe corresponding to this file
                     try {
                         postRemoveToApi(full);
                     } catch (ex) {

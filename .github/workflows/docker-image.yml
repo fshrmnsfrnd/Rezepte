@@ -19,4 +19,4 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag fshrmnsfrnd/cocktails:latest
+      run: docker build . --file Dockerfile --tag fshrmnsfrnd/rezepte:latest

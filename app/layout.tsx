@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Cocktails",
-  description: "Find Cocktails you can make, with what you have at home",
+  title: "Rezepte",
+  description: "Finde Rezepte die dei Kühlschrank hergibt",
 };
 
 export default function RootLayout({
