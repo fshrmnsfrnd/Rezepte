@@ -35,14 +35,13 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # package-lock
 package-lock.json
 
 #database
-#db.db
-#/db.db
+db.db
 
 #local tests
 /resources/json/*
+#/resources/markdown/*
