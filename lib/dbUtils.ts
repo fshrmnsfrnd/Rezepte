@@ -334,3 +334,13 @@ export async function filterRecipesByMustHaveIngredients(ids: number[]): Promise
 	return Array.from(new Set(rows.map((r: any) => Number(r.Recipe_ID))));
 }
 
+export async function getIngredientsOrderedByUsage(): Promise<any[]>{
+	const rows = await db.all(
+		`SELECT I.Name AS Name, COUNT(RI.Ingredient_ID) AS Anzahl
+		FROM Recipe_Ingredient RI
+		LEFT JOIN Ingredient I ON I.Ingredient_ID = RI.Ingredient_ID
+		GROUP BY Name
+		ORDER BY Anzahl;`
+	);
+	return rows;
+}

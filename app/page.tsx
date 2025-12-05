@@ -69,7 +69,16 @@ export default function Home() {
         <div>
             {/*Head of Page*/}
             <header className="header">
-                <a href="/"><h1 className="h1">Recipes</h1></a>
+                <div id="firstLine">
+                    <a href="/"><h1 className="h1">Recipes</h1></a>
+                    <a 
+                        id="statsButton"
+                        onClick={() => { window.location = `/stats` as string & Location; }}
+                        role="button"
+                    >
+                            Statistiken
+                    </a>
+                </div>
                 <div className="showRow">
                     <div
                         role="button"

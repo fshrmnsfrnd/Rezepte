@@ -30,8 +30,18 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-.header>*:hover {
+.header *:hover {
   text-decoration: none;
+}
+
+.header>#firstLine{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+}
+#firstLine>#statsButton{
+  margin-left: auto;
 }
 
 /* Überschriften */
