@@ -3,6 +3,7 @@ import AllRecipes from "@/components/AllRecipes";
 import IngredientList from "@/components/IngredientList";
 import CategoryList from "@/components/CategoryList";
 import MustHaveIngredientList from "@/components/MustHaveIngredientList";
+import RandomRecipe from "@/components/RandomRecipe"
 import { useState, useEffect } from "react";
 import {
     Accordion,
@@ -206,7 +207,7 @@ export default function Home() {
 
                 {/*Right Side with the List of Recipes */}
                 <div className="displayArea rightArea" data-visible={selectedPanel === 'recipes' ? 'true' : 'false'}>
-                    <div style={{ marginBottom: 12, justifySelf: 'center' }}>
+                    <div id="searchAndRandom" style={{ marginBottom: 12, justifySelf: 'center', display: 'flex', alignItems: 'center' }}>
                         <input
                             id="recipe-search"
                             className="input searchTextField"
@@ -216,6 +217,9 @@ export default function Home() {
                             onChange={(e) => setRecipeSearch(e.target.value)}
                             aria-label="Suche Rezepte"
                         />
+                        <div>
+                            <RandomRecipe filterIds={filteredRecipeIds} />
+                        </div>
                     </div>
                     <AllRecipes filterIds={filteredRecipeIds} searchTerm={recipeSearch} />
                     <button className="button upButton"><a href="#">Nach oben</a></button>
