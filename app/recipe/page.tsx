@@ -143,7 +143,7 @@ export function RecipeDetail() {
                                 </div>
 
                                 <div className="timer-box">
-                                    <Timer expiryTimestamp={time} />
+                                    <Timer expiryTimestamp={time} beepCount={8} />
                                 </div>
                             </div>
                         )}
