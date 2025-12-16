@@ -1,6 +1,4 @@
 /* Preparation + Timer layout */
-
-
 .prep-timer-row {
     display: flex;
     gap: 16px;
@@ -72,7 +70,7 @@
 }
 
 .control-action{
-    padding: 6px 8px;
+    padding: 3px 6px;
     border-radius: 6px;
     background-color: #33cccc;
     color: #1a1a1a;
