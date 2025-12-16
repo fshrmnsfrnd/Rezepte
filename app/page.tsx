@@ -77,7 +77,7 @@ export default function Home() {
                         onClick={() => { window.location = `/stats` as string & Location; }}
                         role="button"
                     >
-                            Statistiken
+                        Statistiken
                     </a>
                 </div>
                 <div className="showRow">
@@ -103,7 +103,7 @@ export default function Home() {
                 <div className="displayArea leftArea" data-visible={selectedPanel === 'ingredients' ? 'true' : 'false'}>
                     <Accordion type="multiple">
                         <AccordionItem value="ingredientArea">
-                            <AccordionTrigger className="text-2xl">Zutaten</AccordionTrigger>
+                            <AccordionTrigger className="text-2xl">Verfügbare Zutaten</AccordionTrigger>
                             <AccordionContent>
                                 <div className="ingredientArea">
                                     {/*Search ingredient:*/}
