@@ -1,5 +1,6 @@
 'use client'
 import React, { useEffect, useState } from "react";
+import { Textarea } from "@/components/ui/textarea"
 
 function base64urlToBuffer(base64url: string) {
     const padding = "=".repeat((4 - (base64url.length % 4)) % 4);
@@ -18,8 +19,10 @@ function bufferToBase64url(buffer: ArrayBuffer) {
     return base64;
 }
 
-export default function RecipeDetail() {
+export default function Admin() {
     const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+    const [previewRecipeText, setPreviewRecipeText] = useState<string>("");
+    const [previewJson, setPreviewJson] = useState<string>("");
 
     useEffect(() => {
         checkSession();
@@ -34,7 +37,7 @@ export default function RecipeDetail() {
     async function createPasskey() {
         try {
             const res = await fetch("/api/admin/options", { method: "POST", body: JSON.stringify({ type: "register" }), headers: { "Content-Type": "application/json" } });
-            if (res.status === 401) return alert("Bitte zuerst anmelden");
+            if (res.status === 401) return "Bitte zuerst anmelden";
             const j = await res.json();
             const { options, sessionId } = j;
 
@@ -63,7 +66,6 @@ export default function RecipeDetail() {
             const verifyRes = await fetch("/api/admin/verify", { method: "POST", body: JSON.stringify({ type: "register", sessionId, attestation }), headers: { "Content-Type": "application/json" } });
             const vj = await verifyRes.json();
             if (!verifyRes.ok) throw new Error(vj.error || "Registration failed");
-            alert("Passkey erstellt");
             checkSession();
         } catch (e: any) {
             alert(String(e));
@@ -74,7 +76,6 @@ export default function RecipeDetail() {
         try {
             const res = await fetch("/api/admin/options", { method: "POST", body: JSON.stringify({ type: "login" }), headers: { "Content-Type": "application/json" } });
             const j = await res.json();
-            if (!res.ok) return alert(j.error || "Keine Credentials");
             const { options, sessionId } = j;
 
             options.challenge = base64urlToBuffer(options.challenge);
@@ -100,7 +101,6 @@ export default function RecipeDetail() {
             const vj = await verifyRes.json();
             if (!verifyRes.ok) throw new Error(vj.error || "Login failed");
             setAuthenticated(true);
-            alert("Angemeldet");
         } catch (e: any) {
             alert(String(e));
         }
@@ -123,8 +123,21 @@ export default function RecipeDetail() {
                     <button onClick={login} className={"button"}>Mit Passkey anmelden</button>
                 </div>
             )}
-            {authenticated && (<div>Authenticated <button onClick={logout} className={"button"}>Abmelden</button> </div>)}
-
+            {authenticated && (
+                <div>
+                    Authenticated 
+                    <button onClick={logout} className={"button"}>Abmelden</button> 
+                    <Textarea
+                        placeholder="Hier Rezept eingeben"
+                        value={previewRecipeText}
+                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPreviewRecipeText(e.target.value)}
+                    />
+                    <button className="button">Hinzufügen</button>
+                    <div id="previewRecipe">
+                        <pre style={{ whiteSpace: "pre-wrap", maxHeight: 400, overflow: "auto" }}>{previewJson}</pre>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

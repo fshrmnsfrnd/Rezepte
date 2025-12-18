@@ -41,6 +41,7 @@ package-lock.json
 
 #database
 db.db
+auth.db
 
 #local tests
 /resources/json/*

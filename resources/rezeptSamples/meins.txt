@@ -1,0 +1,21 @@
+---
+tags:
+  - "#Rezept"
+Kategorie:
+  - Italienisch
+  - Einfach
+---
+# Zutaten
+---
+
+| Menge | Zutat                |
+| ----- | -------------------- |
+| etwas | Baguette             |
+| etwas | Bruschetta Pesto     |
+| etwas | Basilikum (optional) |
+| etwas | Parmesan             |
+| etwas | Öl                   |
+# Zubereitung
+---
+1. Baguette in der Pfanne mit Öl anbraten, 
+2. dann Pesto, Basilikum und Parmesan drauf.
