@@ -33,7 +33,7 @@ export default function RecipeDetail() {
 
     async function createPasskey() {
         try {
-            const res = await fetch("/api/admin/register/options", { method: "POST" });
+            const res = await fetch("/api/admin/options", { method: "POST", body: JSON.stringify({ type: "register" }), headers: { "Content-Type": "application/json" } });
             if (res.status === 401) return alert("Bitte zuerst anmelden");
             const j = await res.json();
             const { options, sessionId } = j;
@@ -60,7 +60,7 @@ export default function RecipeDetail() {
                 type: cred.type,
             };
 
-            const verifyRes = await fetch("/api/admin/register/verify", { method: "POST", body: JSON.stringify({ sessionId, attestation }), headers: { "Content-Type": "application/json" } });
+            const verifyRes = await fetch("/api/admin/verify", { method: "POST", body: JSON.stringify({ type: "register", sessionId, attestation }), headers: { "Content-Type": "application/json" } });
             const vj = await verifyRes.json();
             if (!verifyRes.ok) throw new Error(vj.error || "Registration failed");
             alert("Passkey erstellt");
@@ -72,7 +72,7 @@ export default function RecipeDetail() {
 
     async function login() {
         try {
-            const res = await fetch("/api/admin/login/options", { method: "POST" });
+            const res = await fetch("/api/admin/options", { method: "POST", body: JSON.stringify({ type: "login" }), headers: { "Content-Type": "application/json" } });
             const j = await res.json();
             if (!res.ok) return alert(j.error || "Keine Credentials");
             const { options, sessionId } = j;
@@ -96,7 +96,7 @@ export default function RecipeDetail() {
                 type: assertion.type,
             };
 
-            const verifyRes = await fetch("/api/admin/login/verify", { method: "POST", body: JSON.stringify({ sessionId, assertion: payload }), headers: { "Content-Type": "application/json" } });
+            const verifyRes = await fetch("/api/admin/verify", { method: "POST", body: JSON.stringify({ type: "login", sessionId, assertion: payload }), headers: { "Content-Type": "application/json" } });
             const vj = await verifyRes.json();
             if (!verifyRes.ok) throw new Error(vj.error || "Login failed");
             setAuthenticated(true);
@@ -114,17 +114,17 @@ export default function RecipeDetail() {
     return (
         <div>
             <header className="header">
-                <a href="/"><h1 className="h1">Rezepte</h1></a>
+                <a href="/"><h1 className="h1">Rezepte Admin</h1></a>
             </header>
-            <main style={{ padding: 20 }}>
-                <h2>Admin</h2>
-                <p>Authentifiziert: {authenticated === null ? "Lädt..." : authenticated ? "Ja" : "Nein"}</p>
-                <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
-                    <button onClick={createPasskey}>Passkey erstellen</button>
-                    <button onClick={login}>Mit Passkey anmelden</button>
-                    <button onClick={logout}>Abmelden</button>
+            {authenticated == null && (<div>Loading...</div>)}
+            {!authenticated && (
+                <div>
+                    <button onClick={createPasskey} className={"button"}>Passkey erstellen</button>
+                    <button onClick={login} className={"button"}>Mit Passkey anmelden</button>
                 </div>
-            </main>
+            )}
+            {authenticated && (<div>Authenticated <button onClick={logout} className={"button"}>Abmelden</button> </div>)}
+
         </div>
     );
 }
