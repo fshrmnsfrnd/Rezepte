@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { db } from "../../../../../lib/db";
+import { db as authDb } from "../../../../../lib/authDb";
 import { createRegistrationOptions, isAuthenticated } from "../../../../../lib/webauthn";
 
 export async function POST(req: Request) {
   const host = req.headers.get("host") || undefined;
 
-  const creds = await db.all("SELECT id FROM AdminCredential");
+  const creds = await authDb.all("SELECT id FROM AdminCredential");
   if (creds.length > 0) {
     // require auth
     const cookie = req.headers.get("cookie") || "";

@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db as authDb } from "./authDb";
 import { randomBytes } from "crypto";
 import {
   generateRegistrationOptions,
@@ -41,7 +41,7 @@ export async function createRegistrationOptions(host?: string) {
   const rpID = rpIdFromHost(host);
   const origin = baseUrlFromHost(host);
 
-  const existing = await db.all("SELECT id FROM AdminCredential");
+  const existing = await authDb.all("SELECT id FROM AdminCredential");
   const excludeCredentials = existing.map((c: any) => ({ id: c.id, type: "public-key" }));
 
   const options = await generateRegistrationOptions({
@@ -55,7 +55,7 @@ export async function createRegistrationOptions(host?: string) {
   });
 
   const sessionId = randomBytes(16).toString("hex");
-  await db.run("INSERT INTO Session (sessionId, createdAt, challenge, type) VALUES (?, ?, ?, ?)", [
+  await authDb.run("INSERT INTO Session (sessionId, createdAt, challenge, type) VALUES (?, ?, ?, ?)", [
     sessionId,
     Date.now(),
     options.challenge,
@@ -66,7 +66,7 @@ export async function createRegistrationOptions(host?: string) {
 }
 
 export async function verifyRegistration(sessionId: string, attestation: any, host?: string) {
-  const row = await db.get("SELECT * FROM Session WHERE sessionId = ?", [sessionId]);
+  const row = await authDb.get("SELECT * FROM Session WHERE sessionId = ?", [sessionId]);
   if (!row || row.type !== "register") throw new Error("Invalid session");
 
   const rpID = rpIdFromHost(host);
@@ -136,7 +136,7 @@ export async function verifyRegistration(sessionId: string, attestation: any, ho
       throw new Error("Unsupported credentialPublicKey type");
     }
 
-    await db.run(
+    await authDb.run(
       "INSERT OR REPLACE INTO AdminCredential (id, publicKey, counter) VALUES (?, ?, ?)",
       [idB64u, pubkeyB64, counter]
     );
@@ -145,7 +145,7 @@ export async function verifyRegistration(sessionId: string, attestation: any, ho
     throw err;
   }
 
-  await db.run("DELETE FROM Session WHERE sessionId = ?", [sessionId]);
+  await authDb.run("DELETE FROM Session WHERE sessionId = ?", [sessionId]);
   return true;
 }
 
@@ -153,7 +153,7 @@ export async function createLoginOptions(host?: string) {
   const rpID = rpIdFromHost(host);
   const origin = baseUrlFromHost(host);
 
-  const creds = await db.all("SELECT id FROM AdminCredential");
+  const creds = await authDb.all("SELECT id FROM AdminCredential");
 
   // If we provide `allowCredentials`, some browsers/OS authenticators may hide
   // the platform authenticator option — omitting allowCredentials lets the
@@ -172,7 +172,7 @@ export async function createLoginOptions(host?: string) {
   });
 
   const sessionId = randomBytes(16).toString("hex");
-  await db.run("INSERT INTO Session (sessionId, createdAt, challenge, type) VALUES (?, ?, ?, ?)", [
+  await authDb.run("INSERT INTO Session (sessionId, createdAt, challenge, type) VALUES (?, ?, ?, ?)", [
     sessionId,
     Date.now(),
     options.challenge,
@@ -183,7 +183,7 @@ export async function createLoginOptions(host?: string) {
 }
 
 export async function verifyLogin(sessionId: string, assertion: any, host?: string) {
-  const row = await db.get("SELECT * FROM Session WHERE sessionId = ?", [sessionId]);
+  const row = await authDb.get("SELECT * FROM Session WHERE sessionId = ?", [sessionId]);
   if (!row || row.type !== "login") throw new Error("Invalid session");
 
   const rpID = rpIdFromHost(host);
@@ -202,13 +202,13 @@ export async function verifyLogin(sessionId: string, assertion: any, host?: stri
     }
   }
   let credential: any = incomingId
-    ? await db.get("SELECT * FROM AdminCredential WHERE id = ?", [incomingId])
+      ? await authDb.get("SELECT * FROM AdminCredential WHERE id = ?", [incomingId])
     : null;
 
   if (!credential) {
     // try tolerant matching: compare raw buffers between incoming id and stored ids
     try {
-      const rows = await db.all("SELECT id, publicKey, counter FROM AdminCredential");
+      const rows = await authDb.all("SELECT id, publicKey, counter FROM AdminCredential");
       const incomingBuf = incomingId ? base64urlToBuffer(incomingId) : null;
       for (const r of rows) {
         try {
@@ -236,8 +236,8 @@ export async function verifyLogin(sessionId: string, assertion: any, host?: stri
           if (incomingBuf && maybeBuf.equals(incomingBuf)) {
             credential = r;
             const normalized = normalizeToBase64url(maybeAscii);
-            try {
-              await db.run("UPDATE AdminCredential SET id = ? WHERE id = ?", [normalized, r.id]);
+              try {
+                await authDb.run("UPDATE AdminCredential SET id = ? WHERE id = ?", [normalized, r.id]);
               credential.id = normalized;
               console.info("[webauthn] Fixed stored double-encoded credential id, updated DB to normalized id");
             } catch (e) {
@@ -297,28 +297,28 @@ export async function verifyLogin(sessionId: string, assertion: any, host?: stri
 
   // update counter (use stored id)
   const newCounter = verification.authenticationInfo?.newCounter ?? credential.counter ?? 0;
-  await db.run("UPDATE AdminCredential SET counter = ? WHERE id = ?", [newCounter, credential.id]);
+  await authDb.run("UPDATE AdminCredential SET counter = ? WHERE id = ?", [newCounter, credential.id]);
 
   // create auth session cookie id
   const authSessionId = randomBytes(16).toString("hex");
-  await db.run("INSERT INTO Session (sessionId, createdAt, type) VALUES (?, ?, ?)", [
+  await authDb.run("INSERT INTO Session (sessionId, createdAt, type) VALUES (?, ?, ?)", [
     authSessionId,
     Date.now(),
     "auth",
   ]);
 
-  await db.run("DELETE FROM Session WHERE sessionId = ?", [sessionId]);
+  await authDb.run("DELETE FROM Session WHERE sessionId = ?", [sessionId]);
 
   return authSessionId;
 }
 
 export async function isAuthenticated(sessionId?: string) {
   if (!sessionId) return false;
-  const row = await db.get("SELECT * FROM Session WHERE sessionId = ? AND type = 'auth'", [sessionId]);
+  const row = await authDb.get("SELECT * FROM Session WHERE sessionId = ? AND type = 'auth'", [sessionId]);
   return !!row;
 }
 
 export async function logoutSession(sessionId?: string) {
   if (!sessionId) return;
-  await db.run("DELETE FROM Session WHERE sessionId = ?", [sessionId]);
+  await authDb.run("DELETE FROM Session WHERE sessionId = ?", [sessionId]);
 }

@@ -50,17 +50,4 @@ await db.exec(`
         FOREIGN KEY (Recipe_ID) REFERENCES Recipe(Recipe_ID),
         FOREIGN KEY (Category_ID) REFERENCES Category(Category_ID)
     );
-
-    CREATE TABLE IF NOT EXISTS AdminCredential (
-        id TEXT PRIMARY KEY,
-        publicKey TEXT,
-        counter INTEGER
-    );
-
-    CREATE TABLE IF NOT EXISTS Session (
-        sessionId TEXT PRIMARY KEY,
-        createdAt INTEGER,
-        challenge TEXT,
-        type TEXT
-    );
 `);
