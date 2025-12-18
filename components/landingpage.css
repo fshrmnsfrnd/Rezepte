@@ -6,6 +6,42 @@
     margin: 5px;
 }
 
+.recipePreview{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.recipeRow{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.recipePreview .recipeMeta{
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.recipePreview .recipeArrow{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.recipeIngredientsCenter{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 6px 0 10px 0;
+}
+.recipeIngredientsCenter .ul{
+    max-width: 640px;
+    width: 100%;
+}
+
 .showArea {
     width: 50vw;
     box-sizing: border-box;
@@ -118,6 +154,14 @@
 
 .clearButton:hover{
     background-color: #162525; /* subtle hover darken */
+}
+
+/* rotate standalone arrow when open */
+.arrow-trigger-standalone svg {
+    transition: transform 160ms ease;
+}
+.arrow-trigger-standalone.open svg {
+    transform: rotate(180deg);
 }
 
 .centered-column{
