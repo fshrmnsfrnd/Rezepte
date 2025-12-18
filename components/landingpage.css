@@ -100,14 +100,14 @@
     gap: 8px;
     width: 100%;
     position: relative;
-    justify-content: center; /* keep the search field centered */
+    justify-content: center;
 }
 
 .clearButton{
     position: absolute;
-    right: 8px;
+    right: 0px;
     /* match main input styling from defaultCSS.css */
-    padding: 5px;
+    padding: 6px;
     border-radius: 6px;
     background-color: #1a1a1a;
     border: 1px solid #66ffcc;
