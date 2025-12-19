@@ -344,3 +344,12 @@ export async function getIngredientsOrderedByUsage(): Promise<any[]>{
 	);
 	return rows;
 }
+
+export async function getIngredientById(id: number): Promise<any>{
+	const row = await db.all(
+		`SELECT I.Name AS Name
+		FROM Ingredient I
+		WHERE I.Ingredient_ID = ?;`, id
+	);
+	return row;
+}

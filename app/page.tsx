@@ -75,6 +75,13 @@ export default function Home() {
             <header className="header">
                 <div id="firstLine">
                     <a href="/"><h1 className="h1">Recipes</h1></a>
+                    <a
+                        id="shoppingList"
+                        onClick={() => { window.location = `/shoppingList` as string & Location; }}
+                        role="button"
+                    >
+                        Einkaufsliste
+                    </a>
                     <a 
                         id="statsButton"
                         onClick={() => { window.location = `/stats` as string & Location; }}
