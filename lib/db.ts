@@ -12,21 +12,22 @@ export const db = await open({
 await db.exec(`
     CREATE TABLE IF NOT EXISTS Recipe (
         Recipe_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-        Name TEXT,
+        Name TEXT NOT NULL,
         Description TEXT
     );
 
     CREATE TABLE IF NOT EXISTS Step (
         Step_ID INTEGER PRIMARY KEY AUTOINCREMENT,
         Recipe_ID INTEGER,
-        Number INTEGER,
-        Description TEXT,
+        Number INTEGER NOT NULL,
+        Description TEXT NOT NULL,
+        Duration INTEGER,
         FOREIGN KEY (Recipe_ID) REFERENCES Recipe(Recipe_ID)
     );
 
     CREATE TABLE IF NOT EXISTS Ingredient (
         Ingredient_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-        Name TEXT
+        Name TEXT NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS Recipe_Ingredient (

@@ -2,6 +2,7 @@
 import { useParams, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useState } from "react";
 import Timer from "@/components/Timer";
+import { ShoppingCart, Trash2 } from "lucide-react";
 
 type Ingredient = {
     id: number;
@@ -18,6 +19,28 @@ type Selected = {
     steps: Step[];
 };
 
+function setShoppingCookie(name: string, value: string, days: number = 30) {
+    try {
+        const d = new Date();
+        d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+        const expires = 'expires=' + d.toUTCString();
+        document.cookie = `${name}=${encodeURIComponent(value)}; ${expires}; path=/; SameSite=Lax`;
+    } catch (e) {
+        // ignore
+    }
+}
+
+function getShoppingCookie(name: string) {
+    try {
+        const cookies = document.cookie ? document.cookie.split('; ') : [];
+        const found = cookies.find(c => c.startsWith(name + '='));
+        if (!found) return null;
+        return decodeURIComponent(found.split('=').slice(1).join('='));
+    } catch (e) {
+        return null;
+    }
+}
+
 export default function RecipeWrapper(){
     return(
         <Suspense fallback={<div>Loading Recipe details…</div>}>
@@ -26,16 +49,83 @@ export default function RecipeWrapper(){
     )
 }
 
+function getShoppingListCoockie(): string[] {
+    try {
+        const raw = getShoppingCookie('shoppingList');
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed.map(String);
+        return [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function setListCookie(list: string[] | null | undefined) {
+    try {
+        const next = Array.isArray(list) ? list : [];
+        setShoppingCookie('shoppingList', JSON.stringify(next), 30);
+    } catch (e) {
+        // ignore
+    }
+}
+
 export function RecipeDetail() {
     const [error, setError] = useState<string | null>(null);
     const [selected, setSelected] = useState<Selected | null>(null);
     const [loading, setLoading] = useState(false);
     const [id, setId] = useState<number | null>(null);
+    const [shoppingListUpdated, setshoppingListUpdated] = useState<boolean>(false);
     const params = useSearchParams()
+
+    useEffect(() => {
+
+    }, [shoppingListUpdated])
+
     useEffect(() => {
         console.log("Params:", params);
         setId(params.get("recipeID") ? parseInt(params.get("recipeID")!, 10) : null);
     }, [params]);
+
+    function addToShoppingList(element: string){
+        try {
+            const name = (element ?? '').trim();
+            if (!name) return;
+            const list = getShoppingListCoockie();
+            if (!list.includes(name)) {
+                list.push(name);
+                setListCookie(list);
+            }
+        } catch (e) {
+            // ignore
+        }
+        setshoppingListUpdated(!shoppingListUpdated)
+    }
+
+    function removeFromShoppingList(element: string){
+        try {
+            const name = (element ?? '').trim();
+            if (!name) return;
+            const list = getShoppingListCoockie();
+            const next = list.filter(item => item !== name);
+            setListCookie(next);
+        } catch (e) {
+            // ignore
+        }
+        setshoppingListUpdated(!shoppingListUpdated)
+    }
+
+    function shoppingListHas(element: string):boolean{
+        try {
+            const name = (element ?? '').trim();
+            if (!name) return false;
+            const list = getShoppingListCoockie();
+            return list.includes(name);
+        } catch (e) {
+            return false;
+        }
+    }
+
     useEffect(() => {
         if (id == null) {
             setSelected(null);
@@ -122,12 +212,25 @@ export function RecipeDetail() {
                             </thead>
 
                             <tbody className="tbody">
-                                {selected.ingredients.map((i) => (
-                                    <tr key={i.id} className="tr">
-                                        <td className="td">{i.amount} {i.unit}</td>
-                                        <td className="td">{i.name}</td>
-                                    </tr>
-                                ))}
+                                {selected.ingredients.map((i) => {
+                                    return (
+                                        <tr key={i.id} className="tr">
+                                            <td className="td">{i.amount} {i.unit}</td>
+                                            <td className="td" style={{display: 'flex', alignItems: 'center'}}>
+                                                <span className="ingredientName">{i.name}</span>
+                                                {shoppingListHas(i.amount + " " + i.unit + " " + i.name) ? (
+                                                    <button onClick={() => removeFromShoppingList(i.amount + " " + i.unit + " " + i.name)} aria-label={`Remove ${i.name} from shopping list`} style={{marginLeft: "auto"}}>
+                                                        <Trash2 />
+                                                    </button>
+                                                ) : (
+                                                        <button onClick={() => addToShoppingList(i.amount + " " + i.unit + " " + i.name)} aria-label={`Add ${i.name} to shopping list`} style={{marginLeft: "auto"}}>
+                                                        <ShoppingCart />
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
 

@@ -11,9 +11,10 @@ type Props = {
     onFilterChange?: (recipeIds: number[] | null, source: 'ingredients' | 'categories') => void;
     searchTerm?: string | null;
     amountMissingIngredients?: number;
+    clearSignal?: number;
 };
 
-export default function IngredientList({ onFilterChange, searchTerm, amountMissingIngredients = 0}: Props) {
+export default function IngredientList({ onFilterChange, searchTerm, amountMissingIngredients = 0, clearSignal }: Props) {
     
     const [ingredients, setIngredients] = useState<Ingredient[] | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -145,6 +146,21 @@ export default function IngredientList({ onFilterChange, searchTerm, amountMissi
             // ignore parse errors
         }
     }, [ingredients]);
+
+    // Clear selection when parent requests it via clearSignal
+    useEffect(() => {
+        if (typeof clearSignal === 'undefined') return;
+        // wipe selection
+        setSelectedIds(new Set());
+        try {
+            setCookie(COOKIE_NAME, JSON.stringify([]), 7);
+        } catch (e) {
+            // ignore
+        }
+        // inform parent that filter is cleared
+        updateFilterFromSelection([]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [clearSignal]);
 
     const term = (searchTerm ?? '').trim().toLowerCase();
     const filteredIngredients = Array.isArray(ingredients)

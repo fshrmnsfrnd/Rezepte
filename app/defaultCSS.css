@@ -117,7 +117,6 @@ body {
 
 /* Tabellen */
 .table {
-  width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   margin-bottom: 20px;
@@ -129,7 +128,7 @@ body {
 
 .th,
 .td {
-  padding: 10px;
+  padding: 7px;
   border: 1px solid #66ffcc;
   text-align: left;
 }
@@ -158,7 +157,7 @@ body {
 .input,
 .textarea,
 .select{
-  padding: 10px;
+  padding: 6px;
   border: 1px solid #66ffcc;
   border-radius: 6px;
   background-color: #1a1a1a;

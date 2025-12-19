@@ -6,6 +6,42 @@
     margin: 5px;
 }
 
+.recipePreview{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.recipeRow{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.recipePreview .recipeMeta{
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.recipePreview .recipeArrow{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.recipeIngredientsCenter{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 6px 0 10px 0;
+}
+.recipeIngredientsCenter .ul{
+    max-width: 640px;
+    width: 100%;
+}
+
 .showArea {
     width: 50vw;
     box-sizing: border-box;
@@ -94,6 +130,40 @@
     box-sizing: border-box;
 }
 
+.sectionControls{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    position: relative;
+    justify-content: center;
+}
+
+.clearButton{
+    position: absolute;
+    right: 0px;
+    /* match main input styling from defaultCSS.css */
+    padding: 6px;
+    border-radius: 6px;
+    background-color: #1a1a1a;
+    border: 1px solid #66ffcc;
+    color: #b2f0e5;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.clearButton:hover{
+    background-color: #162525; /* subtle hover darken */
+}
+
+/* rotate standalone arrow when open */
+.arrow-trigger-standalone svg {
+    transition: transform 160ms ease;
+}
+.arrow-trigger-standalone.open svg {
+    transform: rotate(180deg);
+}
+
 .centered-column{
     display: flex;
     flex-direction: column; 
@@ -162,7 +232,6 @@
     .displayArea input[type="text"],
     .displayArea input[type="number"],
     .displayArea textarea {
-        width: 92%;
         max-width: 640px;
         box-sizing: border-box;
     }

@@ -24,6 +24,9 @@ export default function Home() {
     const [recipeSearch, setRecipeSearch] = useState<string>("");
     const [mustHaveIngredientSearch, setMustHaveIngredientSearch] = useState<string>("");
     const [missingAmount, setMissingAmount] = useState<number>();
+    const [clearIngredientsSignal, setClearIngredientsSignal] = useState<number>(0);
+    const [clearCategoriesSignal, setClearCategoriesSignal] = useState<number>(0);
+    const [clearMustHaveSignal, setClearMustHaveSignal] = useState<number>(0);
 
     function decreaseAmount() {
         setMissingAmount((prev) => (prev && prev > 0 ? prev - 1 : 0));
@@ -72,6 +75,13 @@ export default function Home() {
             <header className="header">
                 <div id="firstLine">
                     <a href="/"><h1 className="h1">Recipes</h1></a>
+                    <a
+                        id="shoppingList"
+                        onClick={() => { window.location = `/shoppingList` as string & Location; }}
+                        role="button"
+                    >
+                        Einkaufsliste
+                    </a>
                     <a 
                         id="statsButton"
                         onClick={() => { window.location = `/stats` as string & Location; }}
@@ -107,16 +117,19 @@ export default function Home() {
                             <AccordionContent>
                                 <div className="ingredientArea">
                                     {/*Search ingredient:*/}
-                                    <input
-                                        id="ingredient-search"
-                                        className="input searchTextField"
-                                        type="text"
-                                        placeholder="Suchbegriff..."
-                                        value={ingredientSearch}
-                                        onChange={(e) => setIngredientSearch(e.target.value)}
-                                        aria-label="Suche Zutaten"
-                                    />                                    
-
+                                    <div style={{width: "100%"}} className="sectionControls">
+                                        <input
+                                            id="ingredient-search"
+                                            className="input searchTextField"
+                                            type="text"
+                                            placeholder="Suchbegriff..."
+                                            value={ingredientSearch}
+                                            onChange={(e) => setIngredientSearch(e.target.value)}
+                                            aria-label="Suche Zutaten"
+                                        />
+                                        <button id="ingredientsClear" className="clearButton" onClick={() => { setClearIngredientsSignal(s => s + 1); }}>Clear</button>
+                                    </div>
+                                    
                                     {/*Enter Amount of allowed missing Ingredients */}
                                     <div className="centered-column" style={{ marginBottom: 12}}>
                                         <label className="label">Anzahl der Zutaten, die fehlen dürfen:</label>
@@ -155,7 +168,7 @@ export default function Home() {
                                     </div>
 
                                     {/*The List of Ingredients */}
-                                    <IngredientList onFilterChange={handleFilterChange} searchTerm={ingredientSearch} amountMissingIngredients={missingAmount} />
+                                    <IngredientList onFilterChange={handleFilterChange} searchTerm={ingredientSearch} amountMissingIngredients={missingAmount} clearSignal={clearIngredientsSignal} />
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
@@ -165,6 +178,7 @@ export default function Home() {
                                 <div className="categoryArea">
                                     {/*Search Category:*/}
 
+                                    <div className="sectionControls">
                                     <input
                                         id="category-search"
                                         className="input searchTextField"
@@ -174,9 +188,11 @@ export default function Home() {
                                         onChange={(e) => setCategorySearch(e.target.value)}
                                         aria-label="Suche Kategorien"
                                     />
+                                    <button id="categoriesClear" className="clearButton" onClick={() => setClearCategoriesSignal(s => s + 1)}>Clear</button>
+                                    </div>
 
                                     {/*The List of Categories */}
-                                    <CategoryList onFilterChange={handleFilterChange} searchTerm={categorySearch} />
+                                    <CategoryList onFilterChange={handleFilterChange} searchTerm={categorySearch} clearSignal={clearCategoriesSignal} />
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
@@ -186,6 +202,7 @@ export default function Home() {
                                 <div className="categoryArea">
                                     {/*Search Must have ingredient:*/}
 
+                                    <div className="sectionControls">
                                     <input
                                         id="mustHaveIngredient-search"
                                         className="input searchTextField"
@@ -195,9 +212,11 @@ export default function Home() {
                                         onChange={(e) => setMustHaveIngredientSearch(e.target.value)}
                                         aria-label="Suche Must Have Ingredients"
                                     />
+                                    <button id="mustHaveClear" className="clearButton" onClick={() => setClearMustHaveSignal(s => s + 1)}>Clear</button>
+                                    </div>
 
                                     {/*The List of Categories */}
-                                    <MustHaveIngredientList onFilterChange={handleFilterChange} searchTerm={mustHaveIngredientSearch} />
+                                    <MustHaveIngredientList onFilterChange={handleFilterChange} searchTerm={mustHaveIngredientSearch} clearSignal={clearMustHaveSignal} />
                                 </div>
                             </AccordionContent>
                         </AccordionItem>

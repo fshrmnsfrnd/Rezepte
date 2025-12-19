@@ -11,9 +11,10 @@ type Props = {
     // callback will be invoked with (ids, source).
     onFilterChange?: (recipeIds: number[] | null, source: 'ingredients' | 'categories' | 'mustHaveIngredients') => void;
     searchTerm?: string | null;
+    clearSignal?: number;
 };
 
-export default function CategoryList({ onFilterChange, searchTerm}: Props) {
+export default function CategoryList({ onFilterChange, searchTerm, clearSignal }: Props) {
 
     const [ingredients, setIngredients] = useState<Ingredient[] | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -140,6 +141,19 @@ export default function CategoryList({ onFilterChange, searchTerm}: Props) {
             // ignore parse errors
         }
     }, [ingredients]);
+
+    // Clear selection when parent requests it via clearSignal
+    useEffect(() => {
+        if (typeof clearSignal === 'undefined') return;
+        setSelectedIds(new Set());
+        try {
+            setCookie(COOKIE_NAME, JSON.stringify([]), 7);
+        } catch (e) {
+            // ignore
+        }
+        updateFilterFromSelection([]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [clearSignal]);
 
     const term = (searchTerm ?? '').trim().toLowerCase();
     const filteredIngredients = Array.isArray(ingredients) ? ingredients.filter(i => {
