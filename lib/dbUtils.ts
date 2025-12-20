@@ -76,14 +76,18 @@ async function addRecipe(recipe: Recipe): Promise<{ recipeID: number }> {
 	//Add Recipe
 	const res = await db.run(`INSERT INTO Recipe(Name, Description)VALUES(?, ?)`, [recipe.name, recipe.description]);
 	const recipeID: number = res.lastID as number;
-	//Get Ingredient IDs and add missing
+	//Get Ingredient IDs and add missing and add Links
 	for (let ing of recipe.ingredients) {
 		ing.ingredient_ID = await ensureIngredient(ing.name);
-	}
-	//Add links to Ingredients
-	for (let ing of recipe.ingredients) {
 		await db.run(`INSERT INTO Recipe_Ingredient(Recipe_ID, Ingredient_ID, Amount, Unit, Optional)VALUES(?, ?, ?, ?, ?)`,
-			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional]);
+			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional ?? 0]);
+	}
+	//Get Category IDs and add missing
+	if(recipe.categories){
+		for (let cat of recipe.categories) {
+			cat.category_ID = await ensureCategory(cat.name)
+			await db.run(`INSERT INTO Recipe_Category(Recipe_ID, Category_ID) VALUES(?, ?)`, [recipeID, cat.category_ID])
+		}
 	}
 	//Add Steps
 	if (recipe.steps) {
@@ -100,16 +104,16 @@ async function updateRecipe(newRecipe: Recipe, recipeID: number): Promise<boolea
 	await db.run(`DELETE FROM Recipe_Ingredient WHERE Recipe_ID = ?`, [recipeID]);
 	//Remove Steps
 	await db.run(`DELETE FROM Step WHERE Recipe_ID = ?`, [recipeID]);
+	//Remove Links to Categories
+	await db.run(`DELETE FROM Recipe_Category WHERE Recipe_ID = ?`, [recipeID]);
 	//Update Description
 	await db.run(`UPDATE Recipe SET Description = ? WHERE Recipe_ID = ?`, [newRecipe.description ?? "", recipeID]);
 	//Get Ingredient IDs and add missing
 	for (let ing of newRecipe.ingredients) {
 		ing.ingredient_ID = await ensureIngredient(ing.name);
-	}
-	//Add links to Ingredients
-	for (let ing of newRecipe.ingredients) {
+		//Add links to Ingredients
 		await db.run(`INSERT INTO Recipe_Ingredient(Recipe_ID, Ingredient_ID, Amount, Unit, Optional)VALUES(?, ?, ?, ?, ?)`,
-			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional]);
+			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional ?? 0]);
 	}
 	//Add Steps
 	if (newRecipe.steps) {
@@ -118,6 +122,14 @@ async function updateRecipe(newRecipe: Recipe, recipeID: number): Promise<boolea
 				[recipeID, step.number, step.description, step.duration]);
 		}
 	}
+	//Add Categories
+	if(newRecipe.categories){
+		for (let cat of newRecipe.categories){
+			cat.category_ID = await ensureCategory(cat.name);
+			await db.run(`INSERT INTO Recipe_Category(Recipe_ID, Category_ID) VALUES(?, ?)`, [recipeID, cat.category_ID])
+		}
+	}
+	//Add Category Links
 
 	return true;
 }
