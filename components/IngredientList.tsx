@@ -1,11 +1,7 @@
 'use client'
 import React, { useEffect, useState } from "react";
 import "./landingpage.css";
-
-type Ingredient = {
-    Ingredient_ID?: number;
-    Name?: string;
-};
+import { Recipe, Ingredient, Step, Category } from "@/lib/RecipeDAO";
 
 type Props = {
     onFilterChange?: (recipeIds: number[] | null, source: 'ingredients' | 'categories') => void;
@@ -139,7 +135,7 @@ export default function IngredientList({ onFilterChange, searchTerm, amountMissi
             }).filter((v: number | null) => v !== null) as number[];
 
             // Keep only ids that exist in the current ingredients list
-            const availableIds = new Set(ingredients.map(i => i.Ingredient_ID).filter(Boolean) as number[]);
+            const availableIds = new Set(ingredients.map(i => i.ingredient_ID).filter(Boolean) as number[]);
             const restored = idNums.filter(id => availableIds.has(id));
             if (restored.length > 0) setSelectedIds(new Set(restored));
         } catch (e) {
@@ -166,7 +162,7 @@ export default function IngredientList({ onFilterChange, searchTerm, amountMissi
     const filteredIngredients = Array.isArray(ingredients)
         ? ingredients.filter(i => {
             if (!term) return true;
-            return (i.Name ?? '').toLowerCase().includes(term);
+            return (i.name ?? '').toLowerCase().includes(term);
         })
         : [];
 
@@ -183,7 +179,7 @@ export default function IngredientList({ onFilterChange, searchTerm, amountMissi
             {filteredIngredients.length > 0 && (
                 <ul className="ul ingredientList">
                     {filteredIngredients.map((element, idx) => {
-                        const ingredientID = element.Ingredient_ID ?? (idx + 1);
+                        const ingredientID = element.ingredient_ID ?? (idx + 1);
                         const strId = `ingredient-${ingredientID}`;
                         return (
                             <li className="li" key={ingredientID}>
@@ -195,7 +191,7 @@ export default function IngredientList({ onFilterChange, searchTerm, amountMissi
                                     checked={selectedIds.has(ingredientID)}
                                     onChange={() => toggleSelection(ingredientID)}
                                 />
-                                <label className="label" htmlFor={strId}>{element.Name ?? "Unnamed Ingredient"}</label>
+                                <label className="label" htmlFor={strId}>{element.name ?? "Unnamed Ingredient"}</label>
                             </li>
                         );
                     })}

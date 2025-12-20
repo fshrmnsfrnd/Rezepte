@@ -1,29 +1,18 @@
 'use client'
 import React, { useEffect, useState } from "react";
 import "./landingpage.css";
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion"
 import ArrowTrigger from "@/components/ui/ArrowTrigger"
-
-type RecipeRow = {
-    Recipe_ID?: number;
-    Name?: string;
-    Description?: string;
-};
+import { Recipe, Ingredient, Step } from "@/lib/RecipeDAO";
 
 type Props = {
     filterIds?: number[] | null;
     searchTerm?: string | null;
 };
 
-type Ingredient = { amount?: number | string | null; unit?: string | null; ingredient_name?: string };
+// Use domain classes elsewhere; API rows are treated as untyped objects here.
 
 function RecipeIngredients({ recipeID }: { recipeID: number }) {
-    const [ings, setIngs] = useState<Ingredient[] | null>(null);
+    const [ings, setIngs] = useState<any[] | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -59,16 +48,14 @@ function RecipeIngredients({ recipeID }: { recipeID: number }) {
     return (
         <ul className="ul">
             {ings.map((ing, i) => (
-                <li key={i} className="li">{ing.amount ?? ''} {ing.unit ?? ''} {ing.ingredient_name ?? ''}</li>
+                <li key={i} className="li">{ing.amount ?? ''} {ing.unit ?? ''} {(ing.ingredient_name ?? ing.name ?? '')}</li>
             ))}
         </ul>
     );
 }
 
-
-
 export default function AllRecipes({ filterIds, searchTerm }: Props) {
-    const [recipes, setRecipes] = useState<RecipeRow[] | null>(null);
+    const [recipes, setRecipes] = useState<Recipe[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [openIds, setOpenIds] = useState<Set<number>>(new Set());
 
@@ -90,7 +77,7 @@ export default function AllRecipes({ filterIds, searchTerm }: Props) {
             data = await res.json();
 
             if (Array.isArray(data)) {
-                setRecipes(data as RecipeRow[]);
+                setRecipes(data as Recipe[]);
             } else {
                 setRecipes(null);
                 setError(typeof data === 'string' ? data : 'Unexpected response');
@@ -109,14 +96,14 @@ export default function AllRecipes({ filterIds, searchTerm }: Props) {
         if (filterIds == null) {
             visible = recipes;
         } else {
-            visible = recipes.filter(r => filterIds.includes(r.Recipe_ID as number))
+            visible = recipes.filter(r => filterIds.includes(r.recipe_ID as number))
         }
     }
 
     const term = (searchTerm ?? '').trim().toLowerCase();
     const visibleFiltered = Array.isArray(visible) ? (term ? visible.filter(c => {
-        const name = (c.Name ?? '').toString().toLowerCase();
-        const desc = (c.Description ?? '').toString().toLowerCase();
+        const name = (c.name ?? '').toString().toLowerCase();
+        const desc = (c.description ?? '').toString().toLowerCase();
         return name.includes(term) || desc.includes(term);
     }) : visible) : null;
 
@@ -129,7 +116,7 @@ export default function AllRecipes({ filterIds, searchTerm }: Props) {
             {Array.isArray(visibleFiltered) && (
                 <div id="recipeList">
                     {visibleFiltered.map((element, idx) => {
-                        const recipeID = element.Recipe_ID ?? (idx + 1);
+                        const recipeID = element.recipe_ID ?? (idx + 1);
                         return (
                             <div
                                 className="recipePreview"
@@ -146,8 +133,8 @@ export default function AllRecipes({ filterIds, searchTerm }: Props) {
                             >
                                 <div className="recipeRow">
                                     <div className="recipeMeta">
-                                        <h3 className="h3">{element.Name}</h3>
-                                        <p className="p">{element.Description}</p>
+                                        <h3 className="h3">{element.name}</h3>
+                                        <p className="p">{element.description}</p>
                                     </div>
                                     <div className="recipeArrow">
                                         <ArrowTrigger

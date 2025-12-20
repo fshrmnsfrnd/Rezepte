@@ -2,20 +2,15 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Shuffle } from "lucide-react";
 import "./landingpage.css";
-
-type RecipeRow = {
-    Recipe_ID: number;
-    Name?: string;
-    Description?: string;
-};
+import { Recipe, Ingredient, Step, Category } from "@/lib/RecipeDAO";
 
 type Props = {
     filterIds?: number[] | null;
 };
 
 export default function RandomRecipe({ filterIds}: Props) {
-    const [allRecipes, setAllRecipes] = useState<RecipeRow[] | null>(null);
-    const [possibleRecipesState, setPossibleRecipesState] = useState<RecipeRow[] | null>(null);
+    const [allRecipes, setAllRecipes] = useState<any[] | null>(null);
+    const [possibleRecipesState, setPossibleRecipesState] = useState<any[] | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     async function loadRecipes(): Promise<void> {
@@ -26,7 +21,7 @@ export default function RandomRecipe({ filterIds}: Props) {
             data = await res.json();
 
             if (Array.isArray(data)) {
-                setAllRecipes(data as RecipeRow[]);
+                setAllRecipes(data as any[]);
             } else {
                 setAllRecipes(null);
                 setError(typeof data === 'string' ? data : 'Unexpected response');
@@ -39,16 +34,17 @@ export default function RandomRecipe({ filterIds}: Props) {
     useEffect(() => { loadRecipes(); }, []);
 
     // compute possible recipes from fetched list + filterIds without setting state during render
-    const possibleRecipes = useMemo<RecipeRow[] | null>(() => {
+    const possibleRecipes = useMemo<any[] | null>(() => {
         if (!Array.isArray(allRecipes)) return null;
         if (filterIds == null) return allRecipes;
-        return allRecipes.filter(r => filterIds.includes(r.Recipe_ID as number));
+        return allRecipes.filter(r => filterIds.includes((r.recipe_ID ?? r.Recipe_ID) as number));
     }, [allRecipes, filterIds]);
 
     function getRandomRecipe(): number | null{
         if(possibleRecipes && possibleRecipes.length > 0){
             const randElement: number = Math.floor(Math.random() * possibleRecipes.length);
-            return possibleRecipes[randElement].Recipe_ID;
+            const r = possibleRecipes[randElement];
+            return (r.recipe_ID ?? r.Recipe_ID) as number;
         }
         return null;
     }

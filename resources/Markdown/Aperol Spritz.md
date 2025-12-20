@@ -4,7 +4,7 @@ Kategorie:
   - Spritz
   - Aperitivs
 ---
->Super Sommer Italien Drink
+>Super Sommer Italien Drink 
 # Zutaten
 ---
 
@@ -16,4 +16,4 @@ Kategorie:
 # Zubereitung
 ---
 1. Alles in ein Glas
-2. Auf Eis servieren
+2. Auf Eis servieren 

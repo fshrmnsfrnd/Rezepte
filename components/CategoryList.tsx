@@ -1,11 +1,7 @@
 'use client'
 import React, { useEffect, useState } from "react";
 import "./landingpage.css";
-
-type Category = {
-    Category_ID?: number;
-    Name?: string;
-};
+import { Category } from "@/lib/RecipeDAO";
 
 type Props = {
     // callback will be invoked with (ids, source). Source is always "categories" when called from here.
@@ -29,7 +25,7 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
             const expires = 'expires=' + d.toUTCString();
             document.cookie = `${name}=${encodeURIComponent(value)}; ${expires}; path=/; SameSite=Lax`;
         } catch (e) {
-            // ignore cookie errors in strict environments
+            // ignore cookie errors
         }
     }
 
@@ -54,7 +50,7 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
             else data = await res.text();
 
             if (Array.isArray(data)) {
-                setCategories(data as Category[]);
+                setCategories(data as any[]);
             } else {
                 setCategories(null);
                 setError(typeof data === 'string' ? data : 'Unexpected response');
@@ -134,7 +130,7 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
             }).filter((v: number | null) => v !== null) as number[];
 
             // Keep only ids that exist in the current ingredients list
-            const availableIds = new Set(categories.map(i => i.Category_ID).filter(Boolean) as number[]);
+            const availableIds = new Set(categories.map(i => i.category_ID).filter(Boolean) as number[]);
             const restored = idNums.filter(id => availableIds.has(id));
             if (restored.length > 0) setSelectedIds(new Set(restored));
         } catch (e) {
@@ -158,7 +154,7 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
     const term = (searchTerm ?? '').trim().toLowerCase();
     const filteredIngredients = Array.isArray(categories) ? categories.filter(i => {
             if (!term) return true;
-            return (i.Name ?? '').toLowerCase().includes(term);
+            return (i.name ?? '').toLowerCase().includes(term);
         })
         : [];
 
@@ -174,8 +170,8 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
 
             {filteredIngredients.length > 0 && (
                 <ul className="ul ingredientList">
-                    {filteredIngredients.map((element, idx) => {
-                        const categoryID = element.Category_ID ?? (idx + 1);
+                    {filteredIngredients.map((element: Category, idx: number) => {
+                        const categoryID = element.category_ID ?? (idx + 1);
                         const strId = `ingredient-${categoryID}`;
                         return (
                             <li className="li" key={categoryID}>
@@ -187,7 +183,7 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
                                     checked={selectedIds.has(categoryID)}
                                     onChange={() => toggleSelection(categoryID)}
                                 />
-                                <label className="label" htmlFor={strId}>{element.Name ?? "Unnamed Category"}</label>
+                                <label className="label" htmlFor={strId}>{element.name ?? "Unnamed Category"}</label>
                             </li>
                         );
                     })}

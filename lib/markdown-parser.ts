@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { Recipe, Ingredient, Step, Category } from './RecipeDAO';
 
 export function safeFileName(name: string) {
     return name.replace(/[\\/:*?"<>|]/g, '_');
@@ -7,17 +8,7 @@ export function safeFileName(name: string) {
 // helper kept for compatibility with previous implementation
 function colsIgnoredIndex(_: string) { return 0; }
 
-export type Ingredient = {
-    ingredient_name: string;
-    amount: number | null;
-    unit: string | null;
-    optional?: boolean;
-};
-
-export type Step = {
-    step_number: number;
-    instruction: string;
-};
+// Use domain classes from RecipeDAO.ts instead of custom types
 
 export function parseMarkdownToJson(markdown: string, fileName: string) {
     const lines = markdown.split(/\r?\n/);
@@ -39,7 +30,7 @@ export function parseMarkdownToJson(markdown: string, fileName: string) {
     }
 
     // parse YAML-like frontmatter for categories (look for 'Kategorie' key)
-    const categories: { category_id: null; category_name: string }[] = [];
+    const categories: Category[] = [];
     if (lines.length > 0 && lines[0].trim() === '---') {
         let fmEnd = -1;
         for (let i = 1; i < lines.length; i++) {
@@ -52,7 +43,7 @@ export function parseMarkdownToJson(markdown: string, fileName: string) {
                 if (/^Kategorie\s*:/i.test(l)) {
                     for (let j = i + 1; j < fmLines.length; j++) {
                         const m = fmLines[j].match(/^\s*-\s*(.+)$/);
-                        if (m) categories.push({ category_id: null, category_name: m[1].trim() });
+                        if (m) categories.push(new Category(m[1].trim()));
                         else break;
                     }
                     break;
@@ -114,7 +105,13 @@ export function parseMarkdownToJson(markdown: string, fileName: string) {
                     unit = unit ? unit.replace(optionalPattern, '').trim() : unit;
                 }
 
-                ingredients.push({ ingredient_name: ingredient_name.trim(), amount, unit: unit ? unit.trim() : unit, optional: optionalFlag });
+                ingredients.push(new Ingredient(
+                    ingredient_name.trim(),
+                    undefined,
+                    amount ?? undefined,
+                    unit ? unit.trim() : unit || undefined,
+                    optionalFlag
+                ));
             }
         });
     }
@@ -128,7 +125,7 @@ export function parseMarkdownToJson(markdown: string, fileName: string) {
         if (!inSteps) continue;
         const m = l.match(/^(\d+)\.\s*(.*)$/);
         if (m) {
-            steps.push({ step_number: Number(m[1]), instruction: m[2].trim() });
+            steps.push(new Step(Number(m[1]), m[2].trim()));
         }
     }
 
@@ -137,16 +134,10 @@ export function parseMarkdownToJson(markdown: string, fileName: string) {
         for (let i = 0; i < lines.length; i++) {
             const l = lines[i].trim();
             const m = l.match(/^(\d+)\.\s*(.*)$/);
-            if (m) steps.push({ step_number: Number(m[1]), instruction: m[2].trim() });
+            if (m) steps.push(new Step(Number(m[1]), m[2].trim()));
         }
     }
 
-    return {
-        recipe_id: null,
-        recipe_name: title,
-        recipe_description: recipe_description,
-        categories,
-        ingredients,
-        steps
-    };
+    const recipe = new Recipe(title, ingredients, undefined, recipe_description || undefined, steps, categories);
+    return recipe;
 }
