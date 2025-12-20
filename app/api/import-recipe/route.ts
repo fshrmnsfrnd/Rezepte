@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { recipeExists, removeRecipe, createRecipe } from '@/lib/dbUtils';
+import { importRecipe} from '@/lib/dbUtils';
 import { Recipe, Ingredient, Step, Category } from '@/lib/RecipeDAO';
 import { authorize } from '@/tools/utils';
 
@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
     }
     
     try {
+        //Build Recipe Object from Request
         const raw = await req.json();
         const ingredients: Ingredient[] = (raw.ingredients || []).map((ing: any) => new Ingredient(
             String(ing.ingredient_name ?? ing.name ?? '').trim(),
@@ -36,13 +37,11 @@ export async function POST(req: NextRequest) {
             raw.recipe_description || raw.description, 
             steps, 
             categories);
+
+        
         try {
-            const existing = await recipeExists(data.name);
-                if (existing.exists && existing.id) {
-                    await removeRecipe({ id: existing.id });
-                }
-            await createRecipe(data);
-                return NextResponse.json({ ok: true }, { status: 201 });
+            await importRecipe(data);
+            return NextResponse.json({ ok: true }, { status: 201 });
         } catch (err: any) {
             return NextResponse.json({ error: err.message || 'Import failed' }, { status: 500 });
         }

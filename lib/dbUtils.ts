@@ -361,3 +361,72 @@ export async function getIngredientById(id: number): Promise<Ingredient | null>{
 	if (!row) return null;
 	return new Ingredient(row.name ?? '', row.ingredient_ID ?? undefined);
 }
+
+export async function importRecipe(newRecipe: Recipe): Promise<{ recipeID: number } | void>{
+	//Check if Recipe Name already exists
+	const exists = await recipeExists(newRecipe.name)
+	let recipeID: number = exists.id ?? -1;
+
+	if(exists.exists && exists.id){
+		await withTransaction(async () => {
+			await updateRecipe(newRecipe, exists.id as number);
+		});
+	}else{
+		await withTransaction(async () => {
+			const result = await addRecipe(newRecipe);
+			recipeID = result.recipeID;
+		});
+	}
+
+	return { recipeID }
+}
+
+export async function addRecipe(recipe: Recipe): Promise< {recipeID: number}>{
+	//Add Recipe
+	const res = await db.run(`INSERT INTO Recipe(Name, Description)VALUES(?, ?)`,[recipe.name, recipe.description]);
+	const recipeID: number = res.lastID as number;
+	//Get Ingredient IDs and add missing
+	for (let ing of recipe.ingredients) {
+		ing.ingredient_ID = await ensureIngredient(ing.name);
+	}
+	//Add links to Ingredients
+	for (let ing of recipe.ingredients) {
+		await db.run(`INSERT INTO Recipe_Ingredient(Recipe_ID, Ingredient_ID, Amount, Unit, Optional)VALUES(?, ?, ?, ?, ?)`,
+			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional]);
+	}
+	//Add Steps
+	if (recipe.steps) {
+		for (let step of recipe.steps) {
+			await db.run(`INSERT INTO Step(Recipe_ID, Number, Description, Duration)VALUES(?, ?, ?, ?)`,
+				[recipeID, step.number, step.description, step.duration]);
+		}
+	}
+	return { recipeID }
+}
+
+export async function updateRecipe(newRecipe: Recipe, recipeID: number): Promise<boolean> {
+	//Remove Links to Ingredients
+	await db.run(`DELETE FROM Recipe_Ingredient WHERE Recipe_ID = ?`, [recipeID]);
+	//Remove Steps
+	await db.run(`DELETE FROM Step WHERE Recipe_ID = ?`, [recipeID]);
+	//Update Description
+	await db.run(`UPDATE Recipe SET Description = ? WHERE Recipe_ID = ?`, [newRecipe.description ?? "", recipeID]);
+	//Get Ingredient IDs and add missing
+	for(let ing of newRecipe.ingredients){
+		ing.ingredient_ID = await ensureIngredient(ing.name);
+	}
+	//Add links to Ingredients
+	for (let ing of newRecipe.ingredients) {
+		await db.run(`INSERT INTO Recipe_Ingredient(Recipe_ID, Ingredient_ID, Amount, Unit, Optional)VALUES(?, ?, ?, ?, ?)`, 
+			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional]);
+	}
+	//Add Steps
+	if(newRecipe.steps){
+		for (let step of newRecipe.steps) {
+			await db.run(`INSERT INTO Step(Recipe_ID, Number, Description, Duration)VALUES(?, ?, ?, ?)`,
+				[recipeID, step.number, step.description, step.duration]);
+		}
+	}
+
+	return true;
+}
