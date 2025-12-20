@@ -83,7 +83,7 @@ async function addRecipe(recipe: Recipe): Promise<{ recipeID: number }> {
 	//Add links to Ingredients
 	for (let ing of recipe.ingredients) {
 		await db.run(`INSERT INTO Recipe_Ingredient(Recipe_ID, Ingredient_ID, Amount, Unit, Optional)VALUES(?, ?, ?, ?, ?)`,
-			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional]);
+			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional ?? 0]);
 	}
 	//Add Steps
 	if (recipe.steps) {
@@ -109,7 +109,7 @@ async function updateRecipe(newRecipe: Recipe, recipeID: number): Promise<boolea
 	//Add links to Ingredients
 	for (let ing of newRecipe.ingredients) {
 		await db.run(`INSERT INTO Recipe_Ingredient(Recipe_ID, Ingredient_ID, Amount, Unit, Optional)VALUES(?, ?, ?, ?, ?)`,
-			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional]);
+			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional ?? 0]);
 	}
 	//Add Steps
 	if (newRecipe.steps) {
