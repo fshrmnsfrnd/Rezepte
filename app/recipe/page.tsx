@@ -41,8 +41,8 @@ function getShoppingCookie(name: string) {
     }
 }
 
-export default function RecipeWrapper(){
-    return(
+export default function RecipeWrapper() {
+    return (
         <Suspense fallback={<div>Loading Recipe details…</div>}>
             <RecipeDetail />
         </Suspense>
@@ -76,6 +76,7 @@ export function RecipeDetail() {
     const [loading, setLoading] = useState(false);
     const [id, setId] = useState<number | null>(null);
     const [shoppingListUpdated, setshoppingListUpdated] = useState<boolean>(false);
+    const [portions, setPortions] = useState<number>(1);
     const params = useSearchParams()
 
     useEffect(() => {
@@ -87,7 +88,7 @@ export function RecipeDetail() {
         setId(params.get("recipeID") ? parseInt(params.get("recipeID")!, 10) : null);
     }, [params]);
 
-    function addToShoppingList(element: string){
+    function addToShoppingList(element: string) {
         try {
             const name = (element ?? '').trim();
             if (!name) return;
@@ -102,7 +103,7 @@ export function RecipeDetail() {
         setshoppingListUpdated(!shoppingListUpdated)
     }
 
-    function removeFromShoppingList(element: string){
+    function removeFromShoppingList(element: string) {
         try {
             const name = (element ?? '').trim();
             if (!name) return;
@@ -115,7 +116,7 @@ export function RecipeDetail() {
         setshoppingListUpdated(!shoppingListUpdated)
     }
 
-    function shoppingListHas(element: string):boolean{
+    function shoppingListHas(element: string): boolean {
         try {
             const name = (element ?? '').trim();
             if (!name) return false;
@@ -123,6 +124,23 @@ export function RecipeDetail() {
             return list.includes(name);
         } catch (e) {
             return false;
+        }
+    }
+
+    function decreasePortions() {
+        if (portions <= 0) return
+        if (portions <= 1) {
+            setPortions(portions - 0.25);
+        } else {
+            setPortions(portions - 1);
+        }
+    }
+
+    function increasePortions() {
+        if (portions < 1) {
+            setPortions(portions + 0.25);
+        } else {
+            setPortions(portions + 1);
         }
     }
 
@@ -142,7 +160,7 @@ export function RecipeDetail() {
                 const res = await fetch('/api/recipeById', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id}),
+                    body: JSON.stringify({ id: id }),
                 });
                 if (!res.ok) throw new Error(`API returned ${res.status}`);
                 const data: any = await res.json();
@@ -191,7 +209,7 @@ export function RecipeDetail() {
     return (
         <div>
             <header className="header">
-            <a href="/"><h1 className="h1">Rezepte</h1></a>
+                <a href="/"><h1 className="h1">Rezepte</h1></a>
             </header>
             <div className="details">
                 {loading && <div>Loading details…</div>}
@@ -202,37 +220,74 @@ export function RecipeDetail() {
                         <p className="p">{selected.description}</p>
 
                         <h3 className="h3">Zutaten</h3>
+                        <div className="ingredientsContainer" style={{display: "inline-block", justifyItems: "center"}}>
+                            <div className="portionsDiv centered-row" style={{ marginBottom: 12, justifyItems: "center"}}>
+                                <label className="label">Portionen:</label>
+                                <div>
+                                    <button
+                                        id="decreaseAmount"
+                                        className="button"
+                                        type="button"
+                                        aria-label="Verringern"
+                                        onClick={decreasePortions}
+                                    >
+                                        -
+                                    </button>
+                                    <input
+                                        id="amountOfMissingIngredients"
+                                        className="input"
+                                        type="number"
+                                        style={{ width: "6ch", margin: "0 6px 0 6px"}}
+                                        value={portions ?? 1}
+                                        onChange={(e) => {
+                                            const n = parseInt(e.target.value, 10);
+                                            setPortions(Number.isFinite(n) ? n : 0);
+                                        }}
+                                        aria-label="Anzahl fehlender Zutaten"
+                                    />
+                                    <button
+                                        id="increaseAmount"
+                                        className="button"
+                                        type="button"
+                                        aria-label="Erhöhen"
+                                        onClick={increasePortions}
+                                    >
+                                        +
+                                    </button>
+                                </div>
+                            </div>
 
-                        <table className="table">
-                            <thead className="thead">
-                                <tr className="tr">
-                                    <th className="th">Menge</th>
-                                    <th className="th">Zutat</th>
-                                </tr>
-                            </thead>
+                            <table className="table">
+                                <thead className="thead">
+                                    <tr className="tr">
+                                        <th className="th">Menge</th>
+                                        <th className="th">Zutat</th>
+                                    </tr>
+                                </thead>
 
-                            <tbody className="tbody">
-                                {selected.ingredients.map((i) => {
-                                    return (
-                                        <tr key={i.id} className="tr">
-                                            <td className="td">{i.amount} {i.unit}</td>
-                                            <td className="td" style={{display: 'flex', alignItems: 'center'}}>
-                                                <span className="ingredientName">{i.name}</span>
-                                                {shoppingListHas(i.amount + " " + i.unit + " " + i.name) ? (
-                                                    <button onClick={() => removeFromShoppingList(i.amount + " " + i.unit + " " + i.name)} aria-label={`Remove ${i.name} from shopping list`} style={{marginLeft: "auto"}}>
-                                                        <Trash2 />
-                                                    </button>
-                                                ) : (
-                                                        <button onClick={() => addToShoppingList(i.amount + " " + i.unit + " " + i.name)} aria-label={`Add ${i.name} to shopping list`} style={{marginLeft: "auto"}}>
-                                                        <ShoppingCart />
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                                <tbody className="tbody">
+                                    {selected.ingredients.map((i) => {
+                                        return (
+                                            <tr key={i.id} className="tr">
+                                                <td className="td">{i.amount * portions} {i.unit}</td>
+                                                <td className="td" style={{ display: 'flex', alignItems: 'center' }}>
+                                                    <span className="ingredientName">{i.name}</span>
+                                                    {shoppingListHas(i.amount + " " + i.unit + " " + i.name) ? (
+                                                        <button onClick={() => removeFromShoppingList(i.amount + " " + i.unit + " " + i.name)} aria-label={`Remove ${i.name} from shopping list`} style={{ marginLeft: "auto" }}>
+                                                            <Trash2 />
+                                                        </button>
+                                                    ) : (
+                                                        <button onClick={() => addToShoppingList(i.amount + " " + i.unit + " " + i.name)} aria-label={`Add ${i.name} to shopping list`} style={{ marginLeft: "auto" }}>
+                                                            <ShoppingCart />
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
 
                         {selected.steps.length != 0 && (
                             <div className="prep-timer-row">

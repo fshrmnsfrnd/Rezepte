@@ -60,7 +60,7 @@ export default function Home() {
         }
 
         //else build intersection of the ones set
-        const intersection = getIntersection(
+        const intersection:number[] = getIntersection(
             ...(nextIng ? [nextIng] : []),
             ...(nextCat ? [nextCat] : []),
             ...(nextMustHaveIng ? [nextMustHaveIng] : [])
@@ -74,11 +74,12 @@ export default function Home() {
             {/*Head of Page*/}
             <header className="header">
                 <div id="firstLine">
-                    <a href="/"><h1 className="h1">Recipes</h1></a>
+                    <a href="/"><h1 className="h1">Rezepte</h1></a>
                     <a
                         id="shoppingList"
                         onClick={() => { window.location = `/shoppingList` as string & Location; }}
                         role="button"
+                        style={{margin: "6px 6px 6px auto"}}
                     >
                         Einkaufsliste
                     </a>
@@ -86,6 +87,7 @@ export default function Home() {
                         id="statsButton"
                         onClick={() => { window.location = `/stats` as string & Location; }}
                         role="button"
+                        style={{margin: "6px"}}
                     >
                         Statistiken
                     </a>

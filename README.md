@@ -19,6 +19,8 @@ services:
       - 3000:3000
     volumes:
       - /path/to/md/recipes:/app/resources/Markdown
+      - ./db.db:/app/db.db
+      - ./auth.db/auth.db
     environment:
       - EXT_API_KEY=Your_API_Key_Here
     restart: always
