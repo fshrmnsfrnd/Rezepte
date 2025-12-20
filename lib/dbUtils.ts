@@ -72,43 +72,54 @@ async function _removeRecipeImpl(recipeId: number): Promise<void> {
 	await cleanupCategories();
 }
 
-async function _createRecipeImpl(data: Recipe): Promise<number> {
-	if (!data.name || !data.name.trim()) {
-		throw new Error('Missing recipe name');
+async function addRecipe(recipe: Recipe): Promise<{ recipeID: number }> {
+	//Add Recipe
+	const res = await db.run(`INSERT INTO Recipe(Name, Description)VALUES(?, ?)`, [recipe.name, recipe.description]);
+	const recipeID: number = res.lastID as number;
+	//Get Ingredient IDs and add missing
+	for (let ing of recipe.ingredients) {
+		ing.ingredient_ID = await ensureIngredient(ing.name);
 	}
-	if (!Array.isArray(data.ingredients) || data.ingredients.length === 0) {
-		throw new Error('No ingredients provided');
+	//Add links to Ingredients
+	for (let ing of recipe.ingredients) {
+		await db.run(`INSERT INTO Recipe_Ingredient(Recipe_ID, Ingredient_ID, Amount, Unit, Optional)VALUES(?, ?, ?, ?, ?)`,
+			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional]);
 	}
-
-	const ins = await db.run(`INSERT INTO Recipe (Name, Description) VALUES (?, ?)`, [data.name.trim(), data.description ?? null]);
-	const recipeId = ins.lastID as number;
-
-	for (const ing of data.ingredients as Ingredient[]) {
-		const ingName = (ing.name || '').trim();
-		if (!ingName) continue;
-		const ingId = await ensureIngredient(ingName);
-		await db.run(
-			`INSERT INTO Recipe_Ingredient (Recipe_ID, Ingredient_ID, Amount, Unit, Optional) VALUES (?, ?, ?, ?, ?)`,
-			[recipeId, ingId, ing.amount ?? null, ing.unit ?? null, ing.optional ? 1 : 0]
-		);
+	//Add Steps
+	if (recipe.steps) {
+		for (let step of recipe.steps) {
+			await db.run(`INSERT INTO Step(Recipe_ID, Number, Description, Duration)VALUES(?, ?, ?, ?)`,
+				[recipeID, step.number, step.description, step.duration]);
+		}
 	}
+	return { recipeID }
+}
 
-	if (Array.isArray(data.steps) && data.steps.length > 0) {
-		for (const s of data.steps as Step[]) {
-			await db.run(`INSERT INTO Step (Recipe_ID, Number, Description) VALUES (?, ?, ?)`, [recipeId, s.number, s.description || '']);
+async function updateRecipe(newRecipe: Recipe, recipeID: number): Promise<boolean> {
+	//Remove Links to Ingredients
+	await db.run(`DELETE FROM Recipe_Ingredient WHERE Recipe_ID = ?`, [recipeID]);
+	//Remove Steps
+	await db.run(`DELETE FROM Step WHERE Recipe_ID = ?`, [recipeID]);
+	//Update Description
+	await db.run(`UPDATE Recipe SET Description = ? WHERE Recipe_ID = ?`, [newRecipe.description ?? "", recipeID]);
+	//Get Ingredient IDs and add missing
+	for (let ing of newRecipe.ingredients) {
+		ing.ingredient_ID = await ensureIngredient(ing.name);
+	}
+	//Add links to Ingredients
+	for (let ing of newRecipe.ingredients) {
+		await db.run(`INSERT INTO Recipe_Ingredient(Recipe_ID, Ingredient_ID, Amount, Unit, Optional)VALUES(?, ?, ?, ?, ?)`,
+			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional]);
+	}
+	//Add Steps
+	if (newRecipe.steps) {
+		for (let step of newRecipe.steps) {
+			await db.run(`INSERT INTO Step(Recipe_ID, Number, Description, Duration)VALUES(?, ?, ?, ?)`,
+				[recipeID, step.number, step.description, step.duration]);
 		}
 	}
 
-	if (Array.isArray(data.categories) && data.categories.length > 0) {
-		for (const c of data.categories as Category[]) {
-			const catName = (c.name || '').trim();
-			if (!catName) continue;
-			const catId = await ensureCategory(catName);
-			await db.run(`INSERT INTO Recipe_Category (Recipe_ID, Category_ID) VALUES (?, ?)`, [recipeId, catId]);
-		}
-	}
-
-	return recipeId;
+	return true;
 }
 
 // Exported wrappers keep backward compatibility: they create their own transaction.
@@ -128,70 +139,23 @@ export async function removeRecipe(opts: { name?: string; id?: number }): Promis
 	return { deleted: true, recipe_id: recipeId };
 }
 
-export async function createRecipe(data: Recipe): Promise<{ recipe_id: number }> {
-	const recipeId = await withTransaction(async () => {
-		return _createRecipeImpl(data);
-	});
-	return { recipe_id: recipeId };
-}
+export async function importRecipe(newRecipe: Recipe): Promise<{ recipeID: number } | void> {
+	//Check if Recipe Name already exists
+	const exists = await recipeExists(newRecipe.name)
+	let recipeID: number = exists.id ?? -1;
 
-export async function replaceRecipe(data: Recipe): Promise<{ recipe_id: number; replaced: boolean }> {
-	const existing = await recipeExists(data.name);
-	if (existing.exists && existing.id) {
-		// perform remove + create inside one transaction to avoid intermediate states
-		const recipeId = await withTransaction(async () => {
-			await _removeRecipeImpl(existing.id as number);
-			return _createRecipeImpl(data);
+	if (exists.exists && exists.id) {
+		await withTransaction(async () => {
+			await updateRecipe(newRecipe, exists.id as number);
 		});
-		return { recipe_id: recipeId, replaced: true };
-	}
-	const created = await createRecipe(data);
-	return { recipe_id: created.recipe_id, replaced: false };
-}
-
-// Import helper: move import SQL here so no other module runs SQL directly.
-export async function importRecipePayload(payload: any): Promise<{ recipe_id: number } | void> {
-	const name: string | null = payload.recipe_name || payload.name || null;
-	const description: string | null = payload.recipe_description || payload.description || null;
-	const rawIngredients: any[] = payload.ingredients || [];
-	const rawSteps: any[] = payload.steps || [];
-	const rawCategories: any[] = payload.categories || [];
-
-	if (!name) {
-		throw { status: 400, message: 'Missing recipe name' };
-	}
-	if (!Array.isArray(rawIngredients) || rawIngredients.length === 0) {
-		throw { status: 400, message: 'No ingredients provided - import skipped' };
+	} else {
+		await withTransaction(async () => {
+			const result = await addRecipe(newRecipe);
+			recipeID = result.recipeID;
+		});
 	}
 
-	const ingredients: Ingredient[] = rawIngredients.map((ing: any) => new Ingredient(
-		String(ing.ingredient_name ?? ing.name ?? '').trim(),
-		undefined,
-		typeof ing.amount === 'number' ? ing.amount : null,
-		ing.unit ?? null,
-		!!ing.optional
-	));
-
-	const steps: Step[] = rawSteps.map((s: any) => new Step(
-		Number(s.step_number ?? s.number ?? 0),
-		String(s.instruction ?? s.description ?? '').trim()
-	));
-
-	const categories: Category[] = rawCategories.map((c: any) => new Category(
-		typeof c === 'string' ? c.trim() : String(c?.category_name || c?.Name || c?.name || '').trim()
-	)).filter((c: Category) => !!c.name);
-
-	const recipe = new Recipe(name, ingredients, undefined, description ?? undefined, steps, categories);
-
-	return withTransaction(async () => {
-		const existing = await recipeExists(recipe.name);
-		if (existing.exists && existing.id) {
-			await _removeRecipeImpl(existing.id as number);
-		}
-
-		const recipeId = await _createRecipeImpl(recipe);
-		return { recipe_id: recipeId };
-	});
+	return { recipeID }
 }
 
 // Read-only helpers used by API routes (centralize SQL here)
@@ -362,71 +326,3 @@ export async function getIngredientById(id: number): Promise<Ingredient | null>{
 	return new Ingredient(row.name ?? '', row.ingredient_ID ?? undefined);
 }
 
-export async function importRecipe(newRecipe: Recipe): Promise<{ recipeID: number } | void>{
-	//Check if Recipe Name already exists
-	const exists = await recipeExists(newRecipe.name)
-	let recipeID: number = exists.id ?? -1;
-
-	if(exists.exists && exists.id){
-		await withTransaction(async () => {
-			await updateRecipe(newRecipe, exists.id as number);
-		});
-	}else{
-		await withTransaction(async () => {
-			const result = await addRecipe(newRecipe);
-			recipeID = result.recipeID;
-		});
-	}
-
-	return { recipeID }
-}
-
-export async function addRecipe(recipe: Recipe): Promise< {recipeID: number}>{
-	//Add Recipe
-	const res = await db.run(`INSERT INTO Recipe(Name, Description)VALUES(?, ?)`,[recipe.name, recipe.description]);
-	const recipeID: number = res.lastID as number;
-	//Get Ingredient IDs and add missing
-	for (let ing of recipe.ingredients) {
-		ing.ingredient_ID = await ensureIngredient(ing.name);
-	}
-	//Add links to Ingredients
-	for (let ing of recipe.ingredients) {
-		await db.run(`INSERT INTO Recipe_Ingredient(Recipe_ID, Ingredient_ID, Amount, Unit, Optional)VALUES(?, ?, ?, ?, ?)`,
-			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional]);
-	}
-	//Add Steps
-	if (recipe.steps) {
-		for (let step of recipe.steps) {
-			await db.run(`INSERT INTO Step(Recipe_ID, Number, Description, Duration)VALUES(?, ?, ?, ?)`,
-				[recipeID, step.number, step.description, step.duration]);
-		}
-	}
-	return { recipeID }
-}
-
-export async function updateRecipe(newRecipe: Recipe, recipeID: number): Promise<boolean> {
-	//Remove Links to Ingredients
-	await db.run(`DELETE FROM Recipe_Ingredient WHERE Recipe_ID = ?`, [recipeID]);
-	//Remove Steps
-	await db.run(`DELETE FROM Step WHERE Recipe_ID = ?`, [recipeID]);
-	//Update Description
-	await db.run(`UPDATE Recipe SET Description = ? WHERE Recipe_ID = ?`, [newRecipe.description ?? "", recipeID]);
-	//Get Ingredient IDs and add missing
-	for(let ing of newRecipe.ingredients){
-		ing.ingredient_ID = await ensureIngredient(ing.name);
-	}
-	//Add links to Ingredients
-	for (let ing of newRecipe.ingredients) {
-		await db.run(`INSERT INTO Recipe_Ingredient(Recipe_ID, Ingredient_ID, Amount, Unit, Optional)VALUES(?, ?, ?, ?, ?)`, 
-			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional]);
-	}
-	//Add Steps
-	if(newRecipe.steps){
-		for (let step of newRecipe.steps) {
-			await db.run(`INSERT INTO Step(Recipe_ID, Number, Description, Duration)VALUES(?, ?, ?, ?)`,
-				[recipeID, step.number, step.description, step.duration]);
-		}
-	}
-
-	return true;
-}
