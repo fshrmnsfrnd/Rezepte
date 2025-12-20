@@ -3,21 +3,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import React, { Suspense, useEffect, useState } from "react";
 import Timer from "@/components/Timer";
 import { ShoppingCart, Trash2 } from "lucide-react";
-
-type Ingredient = {
-    id: number;
-    amount: number;
-    unit: string;
-    name: string;
-};
-
-type Step = { id: number; number?: number; description?: string };
-type Selected = {
-    name: string;
-    description: string;
-    ingredients: Ingredient[];
-    steps: Step[];
-};
+import { Recipe, Ingredient, Step } from "@/lib/RecipeDAO";
 
 function setShoppingCookie(name: string, value: string, days: number = 30) {
     try {
@@ -72,7 +58,7 @@ function setListCookie(list: string[] | null | undefined) {
 
 export function RecipeDetail() {
     const [error, setError] = useState<string | null>(null);
-    const [selected, setSelected] = useState<Selected | null>(null);
+    const [selected, setSelected] = useState<Recipe | null>(null);
     const [loading, setLoading] = useState(false);
     const [id, setId] = useState<number | null>(null);
     const [shoppingListUpdated, setshoppingListUpdated] = useState<boolean>(false);
@@ -167,28 +153,34 @@ export function RecipeDetail() {
 
                 if (cancelled) return;
 
-                if (!data || !data.recipe_id) {
-                    setSelected({ name: "Not Found", description: "", ingredients: [], steps: [] });
+                if (!data || (!data.recipe_id && !data.recipe_ID && !data.id)) {
+                    setSelected(null);
                     return;
                 }
 
-                const name: string = data.recipe_name ?? data.Name ?? "";
-                const description: string = data.recipe_description ?? data.Description ?? "";
+                const ingredients: Ingredient[] = (data.ingredients || []).map((ing: any, idx: number) => new Ingredient(
+                    ing.ingredient_name ?? ing.name ?? '',
+                    idx,
+                    ing.amount,
+                    ing.unit,
+                    false
+                ));
 
-                const ingredients: Ingredient[] = (data.ingredients || []).map((ing: any, idx: number) => ({
-                    id: idx,
-                    amount: ing.amount,
-                    unit: ing.unit,
-                    name: ing.ingredient_name
-                }));
+                const steps: Step[] = (data.steps || []).map((s: any, idx: number) => new Step(
+                    s.step_number ?? s.number ?? 0,
+                    s.instruction ?? s.description ?? '',
+                    undefined,
+                    s.step_ID ?? idx
+                ));
 
-                const steps: Step[] = (data.steps || []).map((s: any, idx: number) => ({
-                    id: idx,
-                    number: s.step_number,
-                    description: s.instruction
-                }));
+                setSelected(new Recipe(
+                    data.recipe_name ?? data.Name ?? data.name ?? '', 
+                    ingredients, 
+                    data.id ?? data.recipe_id ?? data.recipe_ID ?? undefined, 
+                    data.recipe_description ?? data.Description ?? data.description ?? undefined, 
+                    steps ?? undefined
+                ));
 
-                setSelected({ name, description, ingredients, steps });
             } catch (err) {
                 if (!cancelled) setError(err instanceof Error ? err.message : String(err));
             } finally {
@@ -237,7 +229,7 @@ export function RecipeDetail() {
                                         id="amountOfMissingIngredients"
                                         className="input"
                                         type="number"
-                                        style={{ width: "6ch", margin: "0 6px 0 6px"}}
+                                        style={{ width: "8ch", margin: "0 6px 0 6px"}}
                                         value={portions ?? 1}
                                         onChange={(e) => {
                                             const n = parseInt(e.target.value, 10);
@@ -266,10 +258,10 @@ export function RecipeDetail() {
                                 </thead>
 
                                 <tbody className="tbody">
-                                    {selected.ingredients.map((i) => {
+                                    {selected.ingredients.map((i, idx) => {
                                         return (
-                                            <tr key={i.id} className="tr">
-                                                <td className="td">{i.amount * portions} {i.unit}</td>
+                                            <tr key={idx} className="tr">
+                                                <td className="td">{(i.amount ?? 0) * portions} {i.unit}</td>
                                                 <td className="td" style={{ display: 'flex', alignItems: 'center' }}>
                                                     <span className="ingredientName">{i.name}</span>
                                                     {shoppingListHas(i.amount + " " + i.unit + " " + i.name) ? (
@@ -289,13 +281,13 @@ export function RecipeDetail() {
                             </table>
                         </div>
 
-                        {selected.steps.length != 0 && (
+                        {selected.steps && selected.steps.length != 0 && (
                             <div className="prep-timer-row">
                                 <div className="prep-content">
                                     <h3 className="h3">Zubereitung</h3>
                                     <ul className="ul">
-                                        {selected.steps.map((s) => (
-                                            <li key={s.id} className="li">{s.number}. {s.description}</li>
+                                        {selected.steps.map((s, idx) => (
+                                            <li key={idx} className="li">{s.number}. {s.description}</li>
                                         ))}
                                     </ul>
                                 </div>

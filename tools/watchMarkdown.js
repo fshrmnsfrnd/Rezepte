@@ -56,7 +56,7 @@ function writeJsonForMd(relPath) {
         if (err) { console.error('read error', err); return; }
         try {
             const parsed = parseMarkdownToJson(data, relPath);
-            const safe = safeFileName(parsed.recipe_name || path.basename(relPath, '.md'));
+            const safe = safeFileName(parsed.name || path.basename(relPath, '.md'));
             const outPath = path.join(jsonDir, `${safe}.json`);
             fs.writeFile(outPath, JSON.stringify(parsed, null, 4), (we) => {
                 if (we) console.error('write error', we);

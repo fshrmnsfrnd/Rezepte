@@ -1,26 +1,5 @@
 import { db } from './db';
-
-export type IngredientInput = {
-	ingredient_name: string;
-	amount?: number | null;
-	unit?: string | null;
-	optional?: boolean;
-};
-
-export type StepInput = {
-	step_number: number;
-	instruction: string;
-};
-
-export type CategoryInput = string | { category_name?: string; name?: string; Name?: string };
-
-export type RecipeData = {
-	name: string;
-	description?: string | null;
-	ingredients: IngredientInput[];
-	steps?: StepInput[];
-	categories?: CategoryInput[];
-};
+import { Recipe, Ingredient, Step, Category } from './RecipeDAO';
 
 // Simple FIFO queue so write transactions are executed sequentially
 let _writeLock: Promise<any> = Promise.resolve();
@@ -93,7 +72,7 @@ async function _removeRecipeImpl(recipeId: number): Promise<void> {
 	await cleanupCategories();
 }
 
-async function _createRecipeImpl(data: RecipeData): Promise<number> {
+async function _createRecipeImpl(data: Recipe): Promise<number> {
 	if (!data.name || !data.name.trim()) {
 		throw new Error('Missing recipe name');
 	}
@@ -104,8 +83,8 @@ async function _createRecipeImpl(data: RecipeData): Promise<number> {
 	const ins = await db.run(`INSERT INTO Recipe (Name, Description) VALUES (?, ?)`, [data.name.trim(), data.description ?? null]);
 	const recipeId = ins.lastID as number;
 
-	for (const ing of data.ingredients) {
-		const ingName = (ing.ingredient_name || '').trim();
+	for (const ing of data.ingredients as Ingredient[]) {
+		const ingName = (ing.name || '').trim();
 		if (!ingName) continue;
 		const ingId = await ensureIngredient(ingName);
 		await db.run(
@@ -115,14 +94,14 @@ async function _createRecipeImpl(data: RecipeData): Promise<number> {
 	}
 
 	if (Array.isArray(data.steps) && data.steps.length > 0) {
-		for (const s of data.steps) {
-			await db.run(`INSERT INTO Step (Recipe_ID, Number, Description) VALUES (?, ?, ?)`, [recipeId, s.step_number, s.instruction || '']);
+		for (const s of data.steps as Step[]) {
+			await db.run(`INSERT INTO Step (Recipe_ID, Number, Description) VALUES (?, ?, ?)`, [recipeId, s.number, s.description || '']);
 		}
 	}
 
 	if (Array.isArray(data.categories) && data.categories.length > 0) {
-		for (const c of data.categories) {
-			const catName = typeof c === 'string' ? c.trim() : String(c?.category_name || c?.Name || c?.name || '').trim();
+		for (const c of data.categories as Category[]) {
+			const catName = (c.name || '').trim();
 			if (!catName) continue;
 			const catId = await ensureCategory(catName);
 			await db.run(`INSERT INTO Recipe_Category (Recipe_ID, Category_ID) VALUES (?, ?)`, [recipeId, catId]);
@@ -149,14 +128,14 @@ export async function removeRecipe(opts: { name?: string; id?: number }): Promis
 	return { deleted: true, recipe_id: recipeId };
 }
 
-export async function createRecipe(data: RecipeData): Promise<{ recipe_id: number }> {
+export async function createRecipe(data: Recipe): Promise<{ recipe_id: number }> {
 	const recipeId = await withTransaction(async () => {
 		return _createRecipeImpl(data);
 	});
 	return { recipe_id: recipeId };
 }
 
-export async function replaceRecipe(data: RecipeData): Promise<{ recipe_id: number; replaced: boolean }> {
+export async function replaceRecipe(data: Recipe): Promise<{ recipe_id: number; replaced: boolean }> {
 	const existing = await recipeExists(data.name);
 	if (existing.exists && existing.id) {
 		// perform remove + create inside one transaction to avoid intermediate states
@@ -172,108 +151,136 @@ export async function replaceRecipe(data: RecipeData): Promise<{ recipe_id: numb
 
 // Import helper: move import SQL here so no other module runs SQL directly.
 export async function importRecipePayload(payload: any): Promise<{ recipe_id: number } | void> {
-	const name = payload.recipe_name || payload.name || null;
-	const description = payload.recipe_description || payload.description || null;
-	const ingredients: IngredientInput[] = payload.ingredients || [];
-	const steps: StepInput[] = payload.steps || [];
+	const name: string | null = payload.recipe_name || payload.name || null;
+	const description: string | null = payload.recipe_description || payload.description || null;
+	const rawIngredients: any[] = payload.ingredients || [];
+	const rawSteps: any[] = payload.steps || [];
+	const rawCategories: any[] = payload.categories || [];
 
 	if (!name) {
 		throw { status: 400, message: 'Missing recipe name' };
 	}
-	if (!Array.isArray(ingredients) || ingredients.length === 0) {
+	if (!Array.isArray(rawIngredients) || rawIngredients.length === 0) {
 		throw { status: 400, message: 'No ingredients provided - import skipped' };
 	}
 
+	const ingredients: Ingredient[] = rawIngredients.map((ing: any) => new Ingredient(
+		String(ing.ingredient_name ?? ing.name ?? '').trim(),
+		undefined,
+		typeof ing.amount === 'number' ? ing.amount : null,
+		ing.unit ?? null,
+		!!ing.optional
+	));
+
+	const steps: Step[] = rawSteps.map((s: any) => new Step(
+		Number(s.step_number ?? s.number ?? 0),
+		String(s.instruction ?? s.description ?? '').trim()
+	));
+
+	const categories: Category[] = rawCategories.map((c: any) => new Category(
+		typeof c === 'string' ? c.trim() : String(c?.category_name || c?.Name || c?.name || '').trim()
+	)).filter((c: Category) => !!c.name);
+
+	const recipe = new Recipe(name, ingredients, undefined, description ?? undefined, steps, categories);
+
 	return withTransaction(async () => {
-		// check if exists
-		const existing = await recipeExists(name);
+		const existing = await recipeExists(recipe.name);
 		if (existing.exists && existing.id) {
 			await _removeRecipeImpl(existing.id as number);
 		}
 
-		const recipeId = await _createRecipeImpl({
-			name,
-			description,
-			ingredients,
-			steps,
-			categories: payload.categories || [],
-		});
-
+		const recipeId = await _createRecipeImpl(recipe);
 		return { recipe_id: recipeId };
 	});
 }
 
 // Read-only helpers used by API routes (centralize SQL here)
-export async function getAllRecipes(): Promise<any[]> {
-	return db.all("SELECT Recipe_ID, Name, Description FROM Recipe ORDER BY Name");
+export async function getAllRecipes(): Promise<Recipe[]> {
+	const rows = await db.all("SELECT Recipe_ID AS recipe_ID, Name AS name, Description AS description FROM Recipe ORDER BY Name");
+	const results: Recipe[] = (rows || []).map((r: any) => new Recipe(
+		r.name ?? '',
+		[],
+		r.recipe_ID ?? undefined,
+		r.description ?? undefined,
+		undefined,
+		undefined
+	));
+	return results;
 }
 
-export async function getCategories(): Promise<any[]> {
+export async function getCategories(): Promise<Category[]> {
 	const sql = `
-		SELECT DISTINCT c.Category_ID, c.Name
+		SELECT DISTINCT c.Category_ID AS category_ID, c.Name AS name
 		FROM Category c
 		JOIN Recipe_Category rc
 			ON c.Category_ID = rc.Category_ID
 		ORDER BY c.Name ASC;
 	`;
-	return db.all(sql);
+	const rows = await db.all(sql);
+	return (rows || []).map((r: any) => new Category(r.name ?? '', r.category_ID ?? undefined));
 }
 
-export async function getIngredientsList(): Promise<any[]> {
+export async function getIngredientsList(): Promise<Ingredient[]> {
 	const sql = `
-		SELECT DISTINCT I.Ingredient_ID, I.Name
+		SELECT DISTINCT I.Ingredient_ID AS ingredient_ID, I.Name AS name
 		FROM Ingredient I
 		JOIN Recipe_Ingredient RI
 			ON I.Ingredient_ID = RI.Ingredient_ID
 		WHERE RI.Optional = 0
 		ORDER BY I.Name ASC;
 	`;
-	return db.all(sql);
+	const rows = await db.all(sql);
+	return (rows || []).map((r: any) => new Ingredient(r.name ?? '', r.ingredient_ID ?? undefined));
 }
 
-export async function getRecipeById(id: number) {
-	const recipe = await db.get(
-		`SELECT Recipe_ID AS recipe_id, Name AS recipe_name, Description AS recipe_description
+export async function getRecipeById(id: number): Promise<Recipe | null> {
+	const recipeRow = await db.get(
+		`SELECT Recipe_ID AS recipe_ID, Name AS name, Description AS description
 		 FROM Recipe WHERE Recipe_ID = ?`,
 		[id]
 	);
-	if (!recipe) return null;
+	if (!recipeRow) return null;
 
 	const ingredientsRows = await db.all(
-		`SELECT Ingredient.Name AS ingredient_name, RI.Amount AS amount, RI.Unit AS unit, RI.Optional AS optional
+		`SELECT Ingredient.Name AS name, RI.Amount AS amount, RI.Unit AS unit, RI.Optional AS optional, Ingredient.Ingredient_ID AS ingredient_ID
 		 FROM Recipe_Ingredient AS RI
 		 JOIN Ingredient ON Ingredient.Ingredient_ID = RI.Ingredient_ID
 		 WHERE RI.Recipe_ID = ?`,
 		[id]
 	);
 
-	const ingredients = (ingredientsRows || []).map((r: any) => ({
-		ingredient_name: r.ingredient_name,
-		amount: r.amount,
-		unit: r.unit,
-		optional: !!r.optional,
-	}));
+	const ingredients: Ingredient[] = (ingredientsRows || []).map((r: any) => new Ingredient(
+		r.name ?? '',
+		r.ingredient_ID ?? undefined,
+		r.amount ?? null,
+		r.unit ?? null,
+		!!r.optional
+	));
 
 	const stepsRows = await db.all(
-		`SELECT Number AS step_number, Description AS instruction
+		`SELECT Number AS number, Description AS description, Step_ID AS step_ID
 		 FROM Step
 		 WHERE Recipe_ID = ?
 		 ORDER BY Number ASC`,
 		[id]
 	);
 
-	const steps = (stepsRows || []).map((r: any) => ({
-		step_number: r.step_number,
-		instruction: r.instruction,
-	}));
+	const steps: Step[] = (stepsRows || []).map((r: any) => new Step(
+		r.number ?? 0,
+		r.description ?? '',
+		undefined,
+		r.step_ID ?? undefined
+	));
 
-	return {
-		recipe_id: recipe.recipe_id,
-		recipe_name: recipe.recipe_name,
-		recipe_description: recipe.recipe_description,
+	const recipe = new Recipe(
+		recipeRow.name ?? '',
 		ingredients,
+		recipeRow.recipe_ID ?? undefined,
+		recipeRow.description ?? undefined,
 		steps,
-	};
+		[]
+	);
+	return recipe;
 }
 
 export async function filterRecipesByCategories(providedIds: number[]): Promise<number[]> {
@@ -345,11 +352,12 @@ export async function getIngredientsOrderedByUsage(): Promise<any[]>{
 	return rows;
 }
 
-export async function getIngredientById(id: number): Promise<any>{
-	const row = await db.all(
-		`SELECT I.Name AS Name
+export async function getIngredientById(id: number): Promise<Ingredient | null>{
+	const row = await db.get(
+		`SELECT I.Ingredient_ID AS ingredient_ID, I.Name AS name
 		FROM Ingredient I
 		WHERE I.Ingredient_ID = ?;`, id
 	);
-	return row;
+	if (!row) return null;
+	return new Ingredient(row.name ?? '', row.ingredient_ID ?? undefined);
 }
