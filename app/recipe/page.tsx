@@ -291,10 +291,12 @@ export function RecipeDetail() {
                                         ))}
                                     </ul>
                                 </div>
-
+                                {//No Timer until i got a better usage and Layout
+                                /*
                                 <div className="timer-box">
                                     <Timer expiryTimestamp={time} beepCount={8} />
                                 </div>
+                                */}
                             </div>
                         )}
                     </>
