@@ -4,6 +4,7 @@ import IngredientList from "@/components/IngredientList";
 import CategoryList from "@/components/CategoryList";
 import MustHaveIngredientList from "@/components/MustHaveIngredientList";
 import RandomRecipe from "@/components/RandomRecipe"
+import Header from "@/components/Header"
 import { useState, useEffect } from "react";
 import {
     Accordion,
@@ -71,44 +72,23 @@ export default function Home() {
     
     return (
         <div>
-            {/*Head of Page*/}
-            <header className="header">
-                <div id="firstLine">
-                    <a href="/"><h1 className="h1">Rezepte</h1></a>
-                    <a
-                        id="shoppingList"
-                        onClick={() => { window.location = `/shoppingList` as string & Location; }}
-                        role="button"
-                        style={{margin: "6px 6px 6px auto"}}
-                    >
-                        Einkaufsliste
-                    </a>
-                    <a 
-                        id="statsButton"
-                        onClick={() => { window.location = `/stats` as string & Location; }}
-                        role="button"
-                        style={{margin: "6px"}}
-                    >
-                        Statistiken
-                    </a>
+            <Header/>
+            <div className="showRow">
+                <div
+                    role="button"
+                    className={`showArea ${selectedPanel === 'ingredients' ? 'active' : ''}`}
+                    onClick={() => setSelectedPanel('ingredients')}
+                >
+                    <h3 className="h3">Filter</h3>
                 </div>
-                <div className="showRow">
-                    <div
-                        role="button"
-                        className={`showArea ${selectedPanel === 'ingredients' ? 'active' : ''}`}
-                        onClick={() => setSelectedPanel('ingredients')}
-                    >
-                        <h3 className="h3">Filter</h3>
-                    </div>
-                    <div
-                        role="button"
-                        className={`showArea ${selectedPanel === 'recipes' ? 'active' : ''}`}
-                        onClick={() => setSelectedPanel('recipes')}
-                    >
-                        <h3 className="h3">Recipes</h3>
-                    </div>
+                <div
+                    role="button"
+                    className={`showArea ${selectedPanel === 'recipes' ? 'active' : ''}`}
+                    onClick={() => setSelectedPanel('recipes')}
+                >
+                    <h3 className="h3">Recipes</h3>
                 </div>
-            </header>
+            </div>
 
             <div className="mainRow">
                 {/*Left Side with the Filters*/}

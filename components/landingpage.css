@@ -60,6 +60,8 @@
     gap: 12px;
     justify-content: center;
     align-items: center;
+    background-color: #2a3b4726;
+    border-radius: 8px;
 }
 
 
