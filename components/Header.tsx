@@ -22,6 +22,14 @@ export default function Header(){
                 >
                     Statistiken
                 </a>
+                <a
+                    id="userButton"
+                    onClick={() => { window.location = `/user` as string & Location; }}
+                    role="button"
+                    style={{ margin: "6px" }}
+                >
+                    Account
+                </a>
             </div>
         </header>
     );

@@ -51,4 +51,45 @@ await db.exec(`
         FOREIGN KEY (Recipe_ID) REFERENCES Recipe(Recipe_ID),
         FOREIGN KEY (Category_ID) REFERENCES Category(Category_ID)
     );
+
+    -- Users and authentication
+    CREATE TABLE IF NOT EXISTS User (
+        User_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Username TEXT UNIQUE NOT NULL,
+        CreatedAt INTEGER NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS UserCredential (
+        id TEXT PRIMARY KEY,
+        User_ID INTEGER NOT NULL,
+        publicKey TEXT,
+        counter INTEGER,
+        FOREIGN KEY (User_ID) REFERENCES User(User_ID)
+    );
+
+    CREATE TABLE IF NOT EXISTS UserSession (
+        sessionId TEXT PRIMARY KEY,
+        User_ID INTEGER NOT NULL,
+        createdAt INTEGER NOT NULL,
+        expiresAt INTEGER NOT NULL,
+        FOREIGN KEY (User_ID) REFERENCES User(User_ID)
+    );
+
+    -- Ephemeral flows to store WebAuthn challenges
+    CREATE TABLE IF NOT EXISTS UserFlow (
+        flowId TEXT PRIMARY KEY,
+        User_ID INTEGER,
+        type TEXT NOT NULL, -- 'register' | 'login'
+        createdAt INTEGER NOT NULL,
+        challenge TEXT NOT NULL,
+        FOREIGN KEY (User_ID) REFERENCES User(User_ID)
+    );
+
+    CREATE TABLE IF NOT EXISTS UserData (
+        User_ID INTEGER NOT NULL,
+        key TEXT NOT NULL,
+        value TEXT,
+        PRIMARY KEY (User_ID, key),
+        FOREIGN KEY (User_ID) REFERENCES User(User_ID)
+    );
 `);

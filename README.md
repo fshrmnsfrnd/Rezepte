@@ -44,6 +44,26 @@ Wesentliche Ordner und Dateien:
 
 ---
 
+## Benutzer-Passkey-Login
+
+- Neue Seite: [app/user/page.tsx](app/user/page.tsx) für Benutzerregistrierung und Login.
+- API-Endpunkte:
+  - [app/api/user/options/route.ts](app/api/user/options/route.ts): Start Registrierung/Anmeldung (WebAuthn Optionen, Flow-ID).
+  - [app/api/user/verify/route.ts](app/api/user/verify/route.ts): Verifizieren von Registrierung/Anmeldung, setzt `user_session` Cookie.
+  - [app/api/user/session/route.ts](app/api/user/session/route.ts): Sessionstatus abrufen.
+  - [app/api/user/logout/route.ts](app/api/user/logout/route.ts): Abmelden, löscht Cookie.
+  - [app/api/user/data/route.ts](app/api/user/data/route.ts): Benutzerbezogene Daten lesen/schreiben.
+
+### Persistenz von Auswahlen
+
+- Auswahlen in `IngredientList` und `MustHaveIngredientList` werden bei angemeldeten Benutzern in `db.db` gespeichert (`UserData` Tabelle) und nicht mehr in Cookies. Ohne Anmeldung bleibt Cookie-Fallback erhalten.
+
+### Datenbankerweiterungen
+
+- Neue Tabellen in `db.db`: `User`, `UserCredential`, `UserSession`, `UserFlow`, `UserData`.
+
+---
+
 ## APIs / Backend-Routen
 
 ### GET /api/allRecipes
