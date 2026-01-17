@@ -11,9 +11,7 @@ function setCookie(name: string, value: string, days: number) {
         d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
         const expires = 'expires=' + d.toUTCString();
         document.cookie = `${name}=${encodeURIComponent(value)}; ${expires}; path=/; SameSite=Lax`;
-    } catch (e) {
-        // ignore
-    }
+    } catch (e) {}
 }
 
 function getCookie(name: string) {
