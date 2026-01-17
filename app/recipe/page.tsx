@@ -4,6 +4,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import Timer from "@/components/Timer";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { Recipe, Ingredient, Step } from "@/lib/RecipeDAO";
+import Header from "@/components/Header"
 
 function setShoppingCookie(name: string, value: string, days: number = 30) {
     try {
@@ -200,9 +201,7 @@ export function RecipeDetail() {
 
     return (
         <div>
-            <header className="header">
-                <a href="/"><h1 className="h1">Rezepte</h1></a>
-            </header>
+            <Header/>
             <div className="details">
                 {loading && <div>Loading details…</div>}
                 {error && <div style={{ color: "red" }}>Error: {error}</div>}

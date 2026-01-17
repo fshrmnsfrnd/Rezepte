@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from "react";
 import { Trash2 } from 'lucide-react'
+import Header from "@/components/Header"
 
 type Item = { id: number; name: string; checked?: boolean };
 
@@ -146,9 +147,7 @@ export default function ShoppingListPage() {
 
     return (
         <div>
-            <header className="header">
-                <a href="/"><h1 className="h1">Rezepte</h1></a>
-            </header>
+            <Header/>
 
             <main style={{ padding: 12 }}>
                 <h2 className="h2">Einkaufsliste</h2>

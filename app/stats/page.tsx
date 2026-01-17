@@ -7,6 +7,7 @@ import {
     AccordionContent,
 } from "@/components/ui/accordion"
 import { MostUsedIngredients } from "@/components/MostUsedIngredients";
+import Header from "@/components/Header"
 
 export default function StatsWrapper(){
     return(
@@ -19,9 +20,7 @@ export default function StatsWrapper(){
 export function Stats() {
     return (
         <div>
-            <header className="header">
-            <a href="/"><h1 className="h1">Rezepte</h1></a>
-            </header>
+            <Header/>
             <div className="stats">
                 <Accordion type="multiple">
                     <AccordionItem value="mostUsedIngredients">
