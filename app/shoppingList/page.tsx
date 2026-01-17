@@ -31,6 +31,7 @@ export default function ShoppingListPage() {
     const [items, setItems] = useState<Item[] | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [authed, setAuthed] = useState<boolean>(false);
 
     useEffect(() => {
         let cancelled = false;
@@ -38,31 +39,52 @@ export default function ShoppingListPage() {
             setLoading(true);
             setError(null);
             try {
-                const raw = getCookie('shoppingList');
-                if (!raw) {
-                    if (!cancelled) setItems([]);
-                    return;
+                // Load cookie items
+                const rawCookie = getCookie('shoppingList');
+                let cookieParsed: any[] = [];
+                if (rawCookie) {
+                    try { cookieParsed = JSON.parse(rawCookie); } catch { cookieParsed = []; }
+                    if (!Array.isArray(cookieParsed)) cookieParsed = [];
                 }
-                let parsed: any[] = [];
-                try { parsed = JSON.parse(raw); } catch (e) { parsed = []; }
-                if (!Array.isArray(parsed) || parsed.length === 0) {
+
+                // Load DB items if authenticated
+                let dbParsed: any[] = [];
+                try {
+                    // Try regardless of local authed flag; rely on server cookie
+                    const s = await fetch('/api/user/session');
+                    const sj = await s.json();
+                    if (!cancelled) setAuthed(!!sj.authenticated);
+                } catch {}
+                try {
+                    const r = await fetch('/api/user/data?key=' + encodeURIComponent('shoppingList'));
+                    if (r.ok) {
+                        const j = await r.json();
+                        if (Array.isArray(j.value)) dbParsed = j.value;
+                    }
+                } catch {}
+
+                const combined = [...cookieParsed, ...dbParsed];
+                if (!Array.isArray(combined) || combined.length === 0) {
                     if (!cancelled) setItems([]);
                     return;
                 }
 
                 // If cookie contains strings (names), use them directly
-                const allStrings = parsed.every(p => typeof p === 'string');
-                const allNumbers = parsed.every(p => typeof p === 'number' || (!isNaN(Number(p)) && p !== null));
+                const allStrings = combined.every(p => typeof p === 'string');
+                const allNumbers = combined.every(p => typeof p === 'number' || (!isNaN(Number(p)) && p !== null));
 
                 if (allStrings) {
-                    const mapped: Item[] = parsed.map((name: string, i: number) => ({ id: i + 1, name, checked: false }));
-                    if (!cancelled) setItems(mapped);
+                    const mapped: Item[] = combined.map((name: string, i: number) => ({ id: i + 1, name, checked: false }));
+                    // de-duplicate by name (case-insensitive)
+                    const seen = new Set<string>();
+                    const dedup = mapped.filter(m => { const k = (m.name || '').toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
+                    if (!cancelled) setItems(dedup);
                     return;
                 }
 
                 // Mixed or numeric entries: separate numeric ids and textual entries
-                const textuals: string[] = parsed.filter(p => typeof p === 'string').map(String);
-                const idCandidates = parsed.filter(p => typeof p === 'number' || (typeof p === 'string' && !isNaN(Number(p))));
+                const textuals: string[] = combined.filter(p => typeof p === 'string').map(String);
+                const idCandidates = combined.filter(p => typeof p === 'number' || (typeof p === 'string' && !isNaN(Number(p))));
                 const ids: number[] = idCandidates.map((v:any) => Number(v)).filter(n => Number.isFinite(n));
 
                 // fetch all ingredients to resolve ids
@@ -84,7 +106,11 @@ export default function ShoppingListPage() {
                 const mappedIds: Item[] = ids.map(id => ({ id, name: byId.get(id) ?? `#${id}`, checked: false }));
                 // append textual entries after resolved ids
                 const mappedTextuals: Item[] = textuals.map((name, i) => ({ id: -(i+1), name, checked: false }));
-                if (!cancelled) setItems([...mappedIds, ...mappedTextuals]);
+                const merged = [...mappedIds, ...mappedTextuals];
+                // de-duplicate by name (case-insensitive)
+                const seen2 = new Set<string>();
+                const dedup2 = merged.filter(m => { const k = (m.name || '').toLowerCase(); if (seen2.has(k)) return false; seen2.add(k); return true; });
+                if (!cancelled) setItems(dedup2);
             } catch (e:any) {
                 if (!cancelled) setError(e instanceof Error ? e.message : String(e));
             } finally {
@@ -95,11 +121,15 @@ export default function ShoppingListPage() {
         return () => { cancelled = true; };
     }, []);
 
-    function updateCookieFromItems(next: Item[]) {
+    async function updatePersistentFromItems(next: Item[]) {
         try {
             // store as array of names (texts) to match cookie format used elsewhere
             const names = next.map(i => i.name);
             setCookie('shoppingList', JSON.stringify(names), 30);
+            // Try to persist server-side; ignore 401/403
+            try {
+                await fetch('/api/user/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'shoppingList', value: names }) });
+            } catch {}
         } catch (e) { /* ignore */ }
     }
 
@@ -115,7 +145,7 @@ export default function ShoppingListPage() {
         setItems(prev => {
             if (!prev) return prev;
             const next = prev.filter(i => i.id !== id);
-            updateCookieFromItems(next);
+            updatePersistentFromItems(next);
             return next;
         });
     }
@@ -124,7 +154,7 @@ export default function ShoppingListPage() {
         setItems(prev => {
             if (!prev) return prev;
             const next = prev.filter(i => !i.checked);
-            updateCookieFromItems(next);
+            updatePersistentFromItems(next);
             return next;
         });
     }
@@ -136,7 +166,7 @@ export default function ShoppingListPage() {
         if (!text) return;
         setItems(prev => {
             const next = (prev ?? []).concat({ id: Date.now(), name: text, checked: false });
-            updateCookieFromItems(next);
+            updatePersistentFromItems(next);
             return next;
         });
         setNewEntry("");
