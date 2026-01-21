@@ -67,10 +67,6 @@ export function RecipeDetail() {
     const params = useSearchParams()
 
     useEffect(() => {
-
-    }, [shoppingListUpdated])
-
-    useEffect(() => {
         console.log("Params:", params);
         setId(params.get("recipeID") ? parseInt(params.get("recipeID")!, 10) : null);
     }, [params]);
@@ -228,7 +224,7 @@ export function RecipeDetail() {
                                         id="amountOfMissingIngredients"
                                         className="input"
                                         type="number"
-                                        style={{ width: "8ch", margin: "0 6px 0 6px"}}
+                                        style={{ margin: "0 6px 0 6px"}}
                                         value={portions ?? 1}
                                         onChange={(e) => {
                                             const n = parseInt(e.target.value, 10);
@@ -263,12 +259,12 @@ export function RecipeDetail() {
                                                 <td className="td">{(i.amount ?? 0) * portions} {i.unit}</td>
                                                 <td className="td" style={{ display: 'flex', alignItems: 'center' }}>
                                                     <span className="ingredientName">{i.name}</span>
-                                                    {shoppingListHas(i.amount + " " + i.unit + " " + i.name) ? (
-                                                        <button onClick={() => removeFromShoppingList(i.amount + " " + i.unit + " " + i.name)} aria-label={`Remove ${i.name} from shopping list`} style={{ marginLeft: "auto" }}>
+                                                    {shoppingListHas((i.amount ? i.amount * portions : "") + " " + i.unit + " " + i.name) ? (
+                                                        <button onClick={() => removeFromShoppingList((i.amount ? i.amount * portions : "") + " " + i.unit + " " + i.name)} aria-label={`Remove ${i.name} from shopping list`} style={{ marginLeft: "auto" }}>
                                                             <Trash2 />
                                                         </button>
                                                     ) : (
-                                                        <button onClick={() => addToShoppingList(i.amount + " " + i.unit + " " + i.name)} aria-label={`Add ${i.name} to shopping list`} style={{ marginLeft: "auto" }}>
+                                                        <button onClick={() => addToShoppingList((i.amount ? i.amount * portions : "") + " " + i.unit + " " + i.name)} aria-label={`Add ${i.name} to shopping list`} style={{ marginLeft: "auto" }}>
                                                             <ShoppingCart />
                                                         </button>
                                                     )}

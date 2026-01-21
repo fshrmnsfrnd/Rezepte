@@ -224,7 +224,6 @@
     }
 
     .input[type="text"],
-    .input[type="number"],
     .textarea,
     .select {
         font-size: 1.125rem;
