@@ -1,5 +1,6 @@
 'use client'
 import React, { useEffect, useState } from "react";
+import Header from "@/components/Header"
 
 function base64urlToBuffer(base64url: string) {
   const padding = "=".repeat((4 - (base64url.length % 4)) % 4);
@@ -101,9 +102,7 @@ export default function UserAuthPage() {
 
   return (
     <div>
-      <header className="header">
-        <a href="/"><h1 className="h1">Benutzer</h1></a>
-      </header>
+      <Header/>
       {authenticated == null && (<div>Loading...</div>)}
       {!authenticated && (
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
