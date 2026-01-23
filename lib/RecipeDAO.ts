@@ -125,7 +125,7 @@ export class Step{
         duration ? this.duration = duration : null;
     }
 
-    public equals(other: Step){
+    public equals(other: Step): boolean{
         if(this.number != other.number){
             return false;
         }
@@ -154,7 +154,7 @@ export class Category{
         category_ID ? this.category_ID = category_ID : null;
     }
 
-    public equals(other: Category){
+    public equals(other: Category): boolean{
         if(this.name != other.name){
             return false;
         }
