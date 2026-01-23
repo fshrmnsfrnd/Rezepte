@@ -68,7 +68,7 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
     useEffect(() => {
         (async () => {
             try {
-                const res = await fetch('/api/user/session');
+                const res = await fetch('/api/auth/session');
                 const j = await res.json();
                 setAuthed(!!j.authenticated);
             } catch {}
@@ -110,6 +110,8 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
     async function saveSelectionDb(ids: number[]) {
         try {
             await fetch('/api/user/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: COOKIE_NAME, value: ids }) });
+            // keep cookie in sync with DB
+            try { setCookie(COOKIE_NAME, JSON.stringify(ids), 7); } catch (e) {}
         } catch {}
     }
 
@@ -150,6 +152,8 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
                         const j = await res.json();
                         if (Array.isArray(j.value)) idNums = j.value.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n));
                     }
+                    // Ensure cookie mirrors DB when authenticated
+                    try { if (Array.isArray(idNums)) setCookie(COOKIE_NAME, JSON.stringify(idNums), 7); } catch (e) {}
                 }
                 if (!idNums) {
                     const raw = getCookie(COOKIE_NAME);

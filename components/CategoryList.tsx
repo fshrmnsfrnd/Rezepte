@@ -15,6 +15,7 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
     const [categories, setCategories] = useState<Category[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const [authed, setAuthed] = useState<boolean>(false);
 
     const COOKIE_NAME = 'selectedCategories';
 
@@ -38,6 +39,24 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
         } catch (e) {
             return null;
         }
+    }
+
+    // Check user session for DB-backed persistence
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch('/api/auth/session');
+                const j = await res.json();
+                setAuthed(!!j.authenticated);
+            } catch {}
+        })();
+    }, []);
+
+    async function saveSelectionDb(ids: number[]) {
+        try {
+            await fetch('/api/user/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: COOKIE_NAME, value: ids }) });
+            try { setCookie(COOKIE_NAME, JSON.stringify(ids), 7); } catch (e) {}
+        } catch {}
     }
 
     async function loadRecipes(): Promise<void> {
@@ -102,7 +121,12 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
             else next.add(id);
             try {
                 const arr = Array.from(next.values());
-                setCookie(COOKIE_NAME, JSON.stringify(arr), 7);
+                if (authed) {
+                    // persist to DB and keep cookie synced
+                    saveSelectionDb(arr);
+                } else {
+                    setCookie(COOKIE_NAME, JSON.stringify(arr), 7);
+                }
             } catch (e) {
                 // swallow cookie write errors
             }
@@ -120,19 +144,32 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
     useEffect(() => {
         if (!Array.isArray(categories) || categories.length === 0) return;
         try {
-            const raw = getCookie(COOKIE_NAME);
-            if (!raw) return;
-            const parsed = JSON.parse(raw);
-            if (!Array.isArray(parsed)) return;
-            const idNums = parsed.map((v: any) => {
-                const n = Number(v);
-                return Number.isFinite(n) ? Math.trunc(n) : null;
-            }).filter((v: number | null) => v !== null) as number[];
+            (async () => {
+                let idNums: number[] | null = null;
+                if (authed) {
+                    const res = await fetch(`/api/user/data?key=${encodeURIComponent(COOKIE_NAME)}`);
+                    if (res.ok) {
+                        const j = await res.json();
+                        if (Array.isArray(j.value)) idNums = j.value.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n));
+                    }
+                    try { if (Array.isArray(idNums)) setCookie(COOKIE_NAME, JSON.stringify(idNums), 7); } catch (e) {}
+                }
+                if (!idNums) {
+                    const raw = getCookie(COOKIE_NAME);
+                    if (!raw) return;
+                    const parsed = JSON.parse(raw);
+                    if (!Array.isArray(parsed)) return;
+                    idNums = parsed.map((v: any) => {
+                        const n = Number(v);
+                        return Number.isFinite(n) ? Math.trunc(n) : null;
+                    }).filter((v: number | null) => v !== null) as number[];
+                }
 
-            // Keep only ids that exist in the current ingredients list
-            const availableIds = new Set(categories.map(i => i.category_ID).filter(Boolean) as number[]);
-            const restored = idNums.filter(id => availableIds.has(id));
-            if (restored.length > 0) setSelectedIds(new Set(restored));
+                // Keep only ids that exist in the current ingredients list
+                const availableIds = new Set(categories.map(i => i.category_ID).filter(Boolean) as number[]);
+                const restored = idNums.filter(id => availableIds.has(id));
+                if (restored.length > 0) setSelectedIds(new Set(restored));
+            })();
         } catch (e) {
             // ignore parse errors
         }
@@ -143,7 +180,8 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
         if (typeof clearSignal === 'undefined') return;
         setSelectedIds(new Set());
         try {
-            setCookie(COOKIE_NAME, JSON.stringify([]), 7);
+            if (authed) saveSelectionDb([]);
+            else setCookie(COOKIE_NAME, JSON.stringify([]), 7);
         } catch (e) {
             // ignore
         }

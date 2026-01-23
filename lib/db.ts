@@ -64,4 +64,12 @@ await db.exec(`
         Item INTEGER,
         FOREIGN KEY (User_ID) REFERENCES User(User_ID)
     );
+
+    CREATE TABLE IF NOT EXISTS UserData (
+        User_ID INTEGER,
+        Key TEXT,
+        Value TEXT,
+        UNIQUE(User_ID, Key),
+        FOREIGN KEY (User_ID) REFERENCES User(User_ID)
+    );
 `);

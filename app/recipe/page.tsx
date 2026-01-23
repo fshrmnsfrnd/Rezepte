@@ -57,6 +57,16 @@ function setListCookie(list: string[] | null | undefined) {
     }
 }
 
+async function saveShoppingListDb(list: string[] | null | undefined) {
+    try {
+        const next = Array.isArray(list) ? list : [];
+        await fetch('/api/user/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'shoppingList', value: next }) });
+        try { setShoppingCookie('shoppingList', JSON.stringify(next), 30); } catch (e) {}
+    } catch (e) {
+        // ignore
+    }
+}
+
 export function RecipeDetail() {
     const [error, setError] = useState<string | null>(null);
     const [selected, setSelected] = useState<Recipe | null>(null);
@@ -64,6 +74,7 @@ export function RecipeDetail() {
     const [id, setId] = useState<number | null>(null);
     const [shoppingListUpdated, setshoppingListUpdated] = useState<boolean>(false);
     const [portions, setPortions] = useState<number>(1);
+    const [authed, setAuthed] = useState<boolean>(false);
     const params = useSearchParams()
 
     useEffect(() => {
@@ -78,7 +89,12 @@ export function RecipeDetail() {
             const list = getShoppingListCoockie();
             if (!list.includes(name)) {
                 list.push(name);
-                setListCookie(list);
+                if (authed) {
+                    // persist to DB and keep cookie synced
+                    void saveShoppingListDb(list);
+                } else {
+                    setListCookie(list);
+                }
             }
         } catch (e) {
             // ignore
@@ -92,7 +108,11 @@ export function RecipeDetail() {
             if (!name) return;
             const list = getShoppingListCoockie();
             const next = list.filter(item => item !== name);
-            setListCookie(next);
+            if (authed) {
+                void saveShoppingListDb(next);
+            } else {
+                setListCookie(next);
+            }
         } catch (e) {
             // ignore
         }
@@ -189,6 +209,28 @@ export function RecipeDetail() {
 
         return () => { cancelled = true; };
     }, [id]);
+
+    // Check session and, if authenticated, overwrite cookie with DB shopping list
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch('/api/auth/session');
+                const j = await res.json();
+                setAuthed(!!j.authenticated);
+                if (j.authenticated) {
+                    try {
+                        const r = await fetch('/api/user/data?key=' + encodeURIComponent('shoppingList'));
+                        if (r.ok) {
+                            const d = await r.json();
+                            if (Array.isArray(d.value)) {
+                                setShoppingCookie('shoppingList', JSON.stringify(d.value), 30);
+                            }
+                        }
+                    } catch {}
+                }
+            } catch {}
+        })();
+    }, []);
 
     const time = new Date();
     time.setSeconds(time.getSeconds() + 600);

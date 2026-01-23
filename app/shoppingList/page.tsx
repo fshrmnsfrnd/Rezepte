@@ -47,21 +47,28 @@ export default function ShoppingListPage() {
 
                 // Load DB items if authenticated
                 let dbParsed: any[] = [];
+                let isAuth = false;
                 try {
                     // Try regardless of local authed flag; rely on server cookie
-                    const s = await fetch('/api/user/session');
+                    const s = await fetch('/api/auth/session');
                     const sj = await s.json();
-                    if (!cancelled) setAuthed(!!sj.authenticated);
-                } catch {}
-                try {
-                    const r = await fetch('/api/user/data?key=' + encodeURIComponent('shoppingList'));
-                    if (r.ok) {
-                        const j = await r.json();
-                        if (Array.isArray(j.value)) dbParsed = j.value;
+                    isAuth = !!sj.authenticated;
+                    if (!cancelled) setAuthed(isAuth);
+                    // If authenticated, prefer DB as source of truth
+                    if (isAuth) {
+                        try {
+                            const r = await fetch('/api/user/data?key=' + encodeURIComponent('shoppingList'));
+                            if (r.ok) {
+                                const j = await r.json();
+                                if (Array.isArray(j.value)) dbParsed = j.value;
+                            }
+                        } catch {}
+                        // overwrite cookie with DB-backed list
+                        try { setCookie('shoppingList', JSON.stringify(dbParsed), 30); } catch (e) {}
                     }
                 } catch {}
-
-                const combined = [...cookieParsed, ...dbParsed];
+                // If authenticated use DB items only; otherwise use cookie items
+                const combined = isAuth ? dbParsed : cookieParsed;
                 if (!Array.isArray(combined) || combined.length === 0) {
                     if (!cancelled) setItems([]);
                     return;
@@ -123,11 +130,14 @@ export default function ShoppingListPage() {
         try {
             // store as array of names (texts) to match cookie format used elsewhere
             const names = next.map(i => i.name);
+            // always update cookie
             setCookie('shoppingList', JSON.stringify(names), 30);
-            // Try to persist server-side; ignore 401/403
-            try {
-                await fetch('/api/user/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'shoppingList', value: names }) });
-            } catch {}
+            // Persist to DB only if authenticated
+            if (authed) {
+                try {
+                    await fetch('/api/user/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'shoppingList', value: names }) });
+                } catch {}
+            }
         } catch (e) { /* ignore */ }
     }
 
