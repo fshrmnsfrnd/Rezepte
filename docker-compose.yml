@@ -12,4 +12,5 @@ services:
       - ./resources/Markdown:/app/resources/Markdown
     environment:
       - EXT_API_KEY=Your_API_Key_Here
+      - JWT_SECRET=Your_JWT_Secret_Here
     restart: always
