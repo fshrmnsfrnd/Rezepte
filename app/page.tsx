@@ -25,7 +25,7 @@ export default function Home() {
     const [recipeSearch, setRecipeSearch] = useState<string>("");
     const [mustHaveIngredientSearch, setMustHaveIngredientSearch] = useState<string>("");
     const [missingAmount, setMissingAmount] = useState<number>();
-    const [clearIngredientsSignal, setClearIngredientsSignal] = useState<number>(0);
+    const [clearIngredientsSignal, setClearIngredientsSignal] = useState<boolean>(false);
     const [clearCategoriesSignal, setClearCategoriesSignal] = useState<number>(0);
     const [clearMustHaveSignal, setClearMustHaveSignal] = useState<number>(0);
 
@@ -73,6 +73,7 @@ export default function Home() {
     return (
         <div>
             <Header/>
+            {clearIngredientsSignal ? 'true' : 'false'}
             <div className="showRow">
                 <div
                     role="button"
@@ -109,7 +110,7 @@ export default function Home() {
                                             onChange={(e) => setIngredientSearch(e.target.value)}
                                             aria-label="Suche Zutaten"
                                         />
-                                        <button id="ingredientsClear" className="clearButton" onClick={() => { setClearIngredientsSignal(s => s + 1); }}>Clear</button>
+                                        <button id="ingredientsClear" className="clearButton" onClick={() => { setClearIngredientsSignal(true); }}>Clear</button>
                                     </div>
                                     
                                     {/*Enter Amount of allowed missing Ingredients */}
@@ -150,7 +151,7 @@ export default function Home() {
                                     </div>
 
                                     {/*The List of Ingredients */}
-                                    <IngredientList onFilterChange={handleFilterChange} searchTerm={ingredientSearch} amountMissingIngredients={missingAmount} clearSignal={clearIngredientsSignal} />
+                                    <IngredientList onFilterChange={handleFilterChange} searchTerm={ingredientSearch} amountMissingIngredients={missingAmount} clearSignal={clearIngredientsSignal} setClearSignal={setClearIngredientsSignal} />
                                 </div>
                             </AccordionContent>
                         </AccordionItem>

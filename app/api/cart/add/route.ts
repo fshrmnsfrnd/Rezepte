@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Add to cart error:", error);
     return NextResponse.json(
-      { error: "Fehler beim Hinzufügen zum Warenkorb" },
+      { error: "Fehler beim Hinzufügen zur Einkaufsliste" },
       { status: 500 }
     );
   }
