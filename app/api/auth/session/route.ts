@@ -21,8 +21,9 @@ export async function GET(request: NextRequest) {
       username: string;
     };
 
-    const user = await db.get("SELECT id FROM users WHERE id = ? AND username = ?", [decoded.userId, decoded.username]);
-    if(user.length === 0) {
+    const user = await db.get("SELECT User_ID FROM User WHERE User_ID = ? AND Username = ?", [decoded.userId, decoded.username]);
+    console.log("User fetched from DB:", user);
+    if(!user) {
       return NextResponse.json(
         { authenticated: false },
         { status: 200 }
