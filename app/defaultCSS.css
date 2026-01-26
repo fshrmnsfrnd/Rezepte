@@ -45,7 +45,13 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.header-actions {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .nav-link {

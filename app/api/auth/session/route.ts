@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
+import { db } from "@/lib/db";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
 
@@ -20,6 +21,14 @@ export async function GET(request: NextRequest) {
       username: string;
     };
 
+    const user = await db.get("SELECT id FROM users WHERE id = ? AND username = ?", [decoded.userId, decoded.username]);
+    if(user.length === 0) {
+      return NextResponse.json(
+        { authenticated: false },
+        { status: 200 }
+      );
+    }
+    
     return NextResponse.json(
       { authenticated: true, userId: decoded.userId, username: decoded.username },
       { status: 200 }

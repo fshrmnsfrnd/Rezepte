@@ -246,3 +246,40 @@
     }
 }
 
+.login-overlay{
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 1000;
+}
+
+.login-modal{
+    position: relative;
+    width: min(520px, 90vw);
+    padding: 24px;
+    background: #0f1b22;
+    border: 1px solid #66ffcc;
+    border-radius: 12px;
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+    width: auto;
+}
+
+.login-close{
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    border: none;
+    background: transparent;
+    color: #b2f0e5;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.login-close:hover{
+    color: #66ffcc;
+}
+

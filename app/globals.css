@@ -177,8 +177,6 @@
 
 /* Styles for user login box */
 .login-box {
-    margin: auto auto;
-    margin-top: 12rem;
     width: 300px;
     padding: 20px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -203,4 +201,10 @@
     width: 100%;
     padding: 10px;
     cursor: pointer;
+}
+
+/* Styles for user login page */
+.login-page {
+    margin: auto auto;
+    margin-top: 12rem;
 }
