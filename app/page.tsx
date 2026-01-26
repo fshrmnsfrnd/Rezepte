@@ -26,8 +26,8 @@ export default function Home() {
     const [mustHaveIngredientSearch, setMustHaveIngredientSearch] = useState<string>("");
     const [missingAmount, setMissingAmount] = useState<number>();
     const [clearIngredientsSignal, setClearIngredientsSignal] = useState<boolean>(false);
-    const [clearCategoriesSignal, setClearCategoriesSignal] = useState<number>(0);
-    const [clearMustHaveSignal, setClearMustHaveSignal] = useState<number>(0);
+    const [clearCategoriesSignal, setClearCategoriesSignal] = useState<boolean>(false);
+    const [clearMustHaveSignal, setClearMustHaveSignal] = useState<boolean>(false);
 
     function decreaseAmount() {
         setMissingAmount((prev) => (prev && prev > 0 ? prev - 1 : 0));
@@ -73,7 +73,6 @@ export default function Home() {
     return (
         <div>
             <Header/>
-            {clearIngredientsSignal ? 'true' : 'false'}
             <div className="showRow">
                 <div
                     role="button"
@@ -171,11 +170,11 @@ export default function Home() {
                                         onChange={(e) => setCategorySearch(e.target.value)}
                                         aria-label="Suche Kategorien"
                                     />
-                                    <button id="categoriesClear" className="clearButton" onClick={() => setClearCategoriesSignal(s => s + 1)}>Clear</button>
+                                    <button id="categoriesClear" className="clearButton" onClick={() => setClearCategoriesSignal(true)}>Clear</button>
                                     </div>
 
                                     {/*The List of Categories */}
-                                    <CategoryList onFilterChange={handleFilterChange} searchTerm={categorySearch} clearSignal={clearCategoriesSignal} />
+                                    <CategoryList onFilterChange={handleFilterChange} searchTerm={categorySearch} clearSignal={clearCategoriesSignal} setClearSignal={setClearCategoriesSignal} />
                                 </div>
                             </AccordionContent>
                         </AccordionItem>
@@ -195,11 +194,11 @@ export default function Home() {
                                         onChange={(e) => setMustHaveIngredientSearch(e.target.value)}
                                         aria-label="Suche Must Have Ingredients"
                                     />
-                                    <button id="mustHaveClear" className="clearButton" onClick={() => setClearMustHaveSignal(s => s + 1)}>Clear</button>
+                                    <button id="mustHaveClear" className="clearButton" onClick={() => setClearMustHaveSignal(true)}>Clear</button>
                                     </div>
 
                                     {/*The List of Categories */}
-                                    <MustHaveIngredientList onFilterChange={handleFilterChange} searchTerm={mustHaveIngredientSearch} clearSignal={clearMustHaveSignal} />
+                                    <MustHaveIngredientList onFilterChange={handleFilterChange} searchTerm={mustHaveIngredientSearch} clearSignal={clearMustHaveSignal} setClearSignal={setClearMustHaveSignal} />
                                 </div>
                             </AccordionContent>
                         </AccordionItem>

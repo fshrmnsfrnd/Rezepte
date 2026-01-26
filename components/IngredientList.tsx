@@ -21,6 +21,17 @@ export default function IngredientList({ onFilterChange, searchTerm, amountMissi
 
     const DATA_KEY = 'selectedIngredients';
 
+    // Check user session for DB-backed persistence
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch('/api/auth/session');
+                const j = await res.json();
+                setAuthed(!!j.authenticated);
+            } catch { }
+        })();
+    }, []);
+
     async function loadRecipes(): Promise<void> {
         setError(null);
         try {
@@ -44,17 +55,6 @@ export default function IngredientList({ onFilterChange, searchTerm, amountMissi
     }
 
     useEffect(() => { loadRecipes(); }, []);
-
-    // Check user session for DB-backed persistence
-    useEffect(() => {
-        (async () => {
-            try {
-                const res = await fetch('/api/auth/session');
-                const j = await res.json();
-                setAuthed(!!j.authenticated);
-            } catch {}
-        })();
-    }, []);
 
     async function updateFilterFromSelection(newSelected: number[]) {
         // no selection => show all

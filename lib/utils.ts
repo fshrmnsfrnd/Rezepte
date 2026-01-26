@@ -13,15 +13,17 @@ export async function saveUserData(key: string, value: string) {
             headers: { 'Content-Type': 'application/json' }, 
             body: JSON.stringify({ key: key, value: value }) 
         });
-    }catch(e){}
-    //Override the Cookie, append logic has to be in calling function
-    try {
-        const d = new Date();
-        const days = 30;
-        d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
-        const expires = 'expires=' + d.toUTCString();
-        document.cookie = `${key}=${encodeURIComponent(value)}; ${expires}; path=/; SameSite=Lax`;
-    } catch (e) { }
+    }catch(e){
+        //Only if not saved to DB
+        //Override the Cookie, append logic has to be in calling function
+        try {
+            const d = new Date();
+            const days = 30;
+            d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+            const expires = 'expires=' + d.toUTCString();
+            document.cookie = `${key}=${encodeURIComponent(value)}; ${expires}; path=/; SameSite=Lax`;
+        } catch (ex) { }
+    }
 }
 
 export async function getUserData(key: string): Promise<Array<any> | undefined> {
@@ -39,13 +41,19 @@ export async function getUserData(key: string): Promise<Array<any> | undefined> 
             }
         }
     } catch (e) {}
-    //Get from DB (API checks if Authenticated)
+    //Get from DB (API checks if Authenticated) — prefer DB value when present
     try {
         const res = await fetch(`/api/user/data?key=${encodeURIComponent(key)}`);
         if (res.ok) {
             const j = await res.json();
-            if (Array.isArray(j.value)){
-                value = j.value.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n));
+            if (j && typeof j.value !== 'undefined' && j.value !== null) {
+                let parsed = j.value;
+                if (typeof parsed === 'string') {
+                    try { parsed = JSON.parse(parsed); } catch (e) { }
+                }
+                if (Array.isArray(parsed)) {
+                    value = parsed.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n));
+                }
             }
         }
     } catch (e) { }

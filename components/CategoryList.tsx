@@ -2,44 +2,23 @@
 import React, { useEffect, useState } from "react";
 import "./landingpage.css";
 import { Category } from "@/lib/RecipeDAO";
+import { saveUserData, getUserData } from "@/lib/utils";
 
 type Props = {
-    // callback will be invoked with (ids, source). Source is always "categories" when called from here.
     onFilterChange?: (recipeIds: number[] | null, source: 'ingredients' | 'categories') => void;
     searchTerm?: string | null;
-    clearSignal?: number;
+    clearSignal?: boolean;
+    setClearSignal?: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export default function CategoryList({ onFilterChange, searchTerm, clearSignal }: Props) {
+export default function CategoryList({ onFilterChange, searchTerm, clearSignal, setClearSignal }: Props) {
     
     const [categories, setCategories] = useState<Category[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
     const [authed, setAuthed] = useState<boolean>(false);
 
-    const COOKIE_NAME = 'selectedCategories';
-
-    function setCookie(name: string, value: string, days: number) {
-        try {
-            const d = new Date();
-            d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
-            const expires = 'expires=' + d.toUTCString();
-            document.cookie = `${name}=${encodeURIComponent(value)}; ${expires}; path=/; SameSite=Lax`;
-        } catch (e) {
-            // ignore cookie errors
-        }
-    }
-
-    function getCookie(name: string) {
-        try {
-            const cookies = document.cookie ? document.cookie.split('; ') : [];
-            const found = cookies.find(c => c.startsWith(name + '='));
-            if (!found) return null;
-            return decodeURIComponent(found.split('=').slice(1).join('='));
-        } catch (e) {
-            return null;
-        }
-    }
+    const DATA_KEY = 'selectedCategories';
 
     // Check user session for DB-backed persistence
     useEffect(() => {
@@ -51,13 +30,6 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
             } catch {}
         })();
     }, []);
-
-    async function saveSelectionDb(ids: number[]) {
-        try {
-            await fetch('/api/user/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: COOKIE_NAME, value: ids }) });
-            try { setCookie(COOKIE_NAME, JSON.stringify(ids), 7); } catch (e) {}
-        } catch {}
-    }
 
     async function loadRecipes(): Promise<void> {
         setError(null);
@@ -119,22 +91,12 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
             else next.add(id);
-            try {
-                const arr = Array.from(next.values());
-                if (authed) {
-                    // persist to DB and keep cookie synced
-                    saveSelectionDb(arr);
-                } else {
-                    setCookie(COOKIE_NAME, JSON.stringify(arr), 7);
-                }
-            } catch (e) {
-                // swallow cookie write errors
-            }
+            try { saveUserData(DATA_KEY, JSON.stringify(Array.from(next.values()))); } catch (e) { }
             return next;
         });
     }
 
-    // Call API whenever selectedIds or amountMissingIngredients changes — avoid updating parent state during render
+    // Call API whenever selectedIds changes — avoid updating parent state during render
     useEffect(() => {
         updateFilterFromSelection(Array.from(selectedIds.values()));
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -143,49 +105,32 @@ export default function CategoryList({ onFilterChange, searchTerm, clearSignal }
     // Restore selection from cookie after ingredients are loaded
     useEffect(() => {
         if (!Array.isArray(categories) || categories.length === 0) return;
-        try {
-            (async () => {
-                let idNums: number[] | null = null;
-                if (authed) {
-                    const res = await fetch(`/api/user/data?key=${encodeURIComponent(COOKIE_NAME)}`);
-                    if (res.ok) {
-                        const j = await res.json();
-                        if (Array.isArray(j.value)) idNums = j.value.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n));
-                    }
-                    try { if (Array.isArray(idNums)) setCookie(COOKIE_NAME, JSON.stringify(idNums), 7); } catch (e) {}
-                }
-                if (!idNums) {
-                    const raw = getCookie(COOKIE_NAME);
-                    if (!raw) return;
-                    const parsed = JSON.parse(raw);
-                    if (!Array.isArray(parsed)) return;
-                    idNums = parsed.map((v: any) => {
-                        const n = Number(v);
-                        return Number.isFinite(n) ? Math.trunc(n) : null;
-                    }).filter((v: number | null) => v !== null) as number[];
-                }
-
-                // Keep only ids that exist in the current ingredients list
-                const availableIds = new Set(categories.map(i => i.category_ID).filter(Boolean) as number[]);
-                const restored = idNums.filter(id => availableIds.has(id));
-                if (restored.length > 0) setSelectedIds(new Set(restored));
-            })();
-        } catch (e) {
-            // ignore parse errors
-        }
-    }, [categories]);
+        (async () => {
+                    try {
+                        let idNums: number[] | null = null;
+                        const raw = await getUserData(DATA_KEY);
+                        if (!Array.isArray(raw)) return;
+                        idNums = raw.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n));
+                        if (idNums.length === 0) return;
+                        const availableIds = new Set(categories.map(i => i.category_ID).filter(Boolean) as number[]);
+                        const restored = idNums.filter(id => availableIds.has(id));
+                        if (restored.length > 0) setSelectedIds(new Set(restored));
+                    } catch {}
+                })();
+    }, [categories, authed]);
 
     // Clear selection when parent requests it via clearSignal
     useEffect(() => {
-        if (typeof clearSignal === 'undefined') return;
-        setSelectedIds(new Set());
-        try {
-            if (authed) saveSelectionDb([]);
-            else setCookie(COOKIE_NAME, JSON.stringify([]), 7);
-        } catch (e) {
-            // ignore
-        }
-        updateFilterFromSelection([]);
+        if (!clearSignal) return;
+        (async () => {
+            // wipe selection
+            setSelectedIds(new Set());
+            try { await saveUserData(DATA_KEY, JSON.stringify([])); } catch (e) { }
+            // inform parent that filter is cleared
+            updateFilterFromSelection([]);
+        })();
+        // notify parent to reset the signal if setter provided
+        try { setClearSignal?.(false); } catch {}
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [clearSignal]);
 
