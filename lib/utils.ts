@@ -6,16 +6,29 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export async function saveUserData(key: string, value: string) {
+    console.log("Saving user data:", key, value);
     //Save to DB (API checks if Authenticated)
-    try{
-        await fetch('/api/user/data', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ key: key, value: value }) 
+    try {
+        const res = await fetch('/api/user/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: key, value: value })
         });
-    }catch(e){
-        //Only if not saved to DB
-        //Override the Cookie, append logic has to be in calling function
+
+        // If server responded non-ok (e.g. 401 when not authenticated), fallback to cookie
+        if (!res.ok) {
+            console.log('Server save failed (status', res.status, '). Falling back to cookie.');
+            try {
+                const d = new Date();
+                const days = 30;
+                d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
+                const expires = 'expires=' + d.toUTCString();
+                document.cookie = `${key}=${encodeURIComponent(value)}; ${expires}; path=/; SameSite=Lax`;
+            } catch (ex) { }
+        }
+    } catch (e) {
+        // Network or other error — fallback to cookie
+        console.log('Network error while saving to server, saving to cookie instead.', e);
         try {
             const d = new Date();
             const days = 30;
@@ -37,7 +50,7 @@ export async function getUserData(key: string): Promise<Array<any> | undefined> 
         if (raw) {
             const parsed = JSON.parse(raw);
             if (Array.isArray(parsed)) {
-                value = parsed.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n));
+                value = parsed;
             }
         }
     } catch (e) {}
@@ -52,7 +65,7 @@ export async function getUserData(key: string): Promise<Array<any> | undefined> 
                     try { parsed = JSON.parse(parsed); } catch (e) { }
                 }
                 if (Array.isArray(parsed)) {
-                    value = parsed.map((v: any) => Number(v)).filter((n: number) => Number.isFinite(n));
+                    value = parsed;
                 }
             }
         }

@@ -5,28 +5,8 @@ import Timer from "@/components/Timer";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { Recipe, Ingredient, Step } from "@/lib/RecipeDAO";
 import Header from "@/components/Header"
-
-function setShoppingCookie(name: string, value: string, days: number = 30) {
-    try {
-        const d = new Date();
-        d.setTime(d.getTime() + days * 24 * 60 * 60 * 1000);
-        const expires = 'expires=' + d.toUTCString();
-        document.cookie = `${name}=${encodeURIComponent(value)}; ${expires}; path=/; SameSite=Lax`;
-    } catch (e) {
-        // ignore
-    }
-}
-
-function getShoppingCookie(name: string) {
-    try {
-        const cookies = document.cookie ? document.cookie.split('; ') : [];
-        const found = cookies.find(c => c.startsWith(name + '='));
-        if (!found) return null;
-        return decodeURIComponent(found.split('=').slice(1).join('='));
-    } catch (e) {
-        return null;
-    }
-}
+import { Item } from "@/app/shoppingList/page";
+import { saveUserData, getUserData } from "@/lib/utils";
 
 export default function RecipeWrapper() {
     return (
@@ -36,98 +16,75 @@ export default function RecipeWrapper() {
     )
 }
 
-function getShoppingListCoockie(): string[] {
-    try {
-        const raw = getShoppingCookie('shoppingList');
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) return parsed.map(String);
-        return [];
-    } catch (e) {
-        return [];
-    }
-}
-
-function setListCookie(list: string[] | null | undefined) {
-    try {
-        const next = Array.isArray(list) ? list : [];
-        setShoppingCookie('shoppingList', JSON.stringify(next), 30);
-    } catch (e) {
-        // ignore
-    }
-}
-
-async function saveShoppingListDb(list: string[] | null | undefined) {
-    try {
-        const next = Array.isArray(list) ? list : [];
-        await fetch('/api/user/data', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'shoppingList', value: next }) });
-        try { setShoppingCookie('shoppingList', JSON.stringify(next), 30); } catch (e) {}
-    } catch (e) {
-        // ignore
-    }
-}
-
 export function RecipeDetail() {
     const [error, setError] = useState<string | null>(null);
     const [selected, setSelected] = useState<Recipe | null>(null);
     const [loading, setLoading] = useState(false);
     const [id, setId] = useState<number | null>(null);
-    const [shoppingListUpdated, setshoppingListUpdated] = useState<boolean>(false);
+    const [shoppingList, setShoppingList] = useState<Item[]>([]);
     const [portions, setPortions] = useState<number>(1);
     const [authed, setAuthed] = useState<boolean>(false);
     const params = useSearchParams()
 
     useEffect(() => {
-        console.log("Params:", params);
         setId(params.get("recipeID") ? parseInt(params.get("recipeID")!, 10) : null);
     }, [params]);
 
-    function addToShoppingList(element: string) {
-        try {
-            const name = (element ?? '').trim();
-            if (!name) return;
-            const list = getShoppingListCoockie();
-            if (!list.includes(name)) {
-                list.push(name);
-                if (authed) {
-                    // persist to DB and keep cookie synced
-                    void saveShoppingListDb(list);
-                } else {
-                    setListCookie(list);
-                }
-            }
-        } catch (e) {
-            // ignore
-        }
-        setshoppingListUpdated(!shoppingListUpdated)
+    // Check user session for DB-backed persistence
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch('/api/auth/session');
+                const j = await res.json();
+                setAuthed(!!j.authenticated);
+            } catch { }
+        })();
+    }, []);
+
+    const DATA_KEY = 'shoppingList';
+
+    const normalizeName = (name: string) => name.trim().toLowerCase();
+
+    const formatItemName = (ingredient: Ingredient, currentPortions: number) => {
+        const amount = ingredient.amount ? ingredient.amount * currentPortions : '';
+        return [amount, ingredient.unit, ingredient.name]
+            .map(part => (part ?? '').toString().trim())
+            .filter(Boolean)
+            .join(' ');
+    };
+
+    useEffect(() => {
+        (async () => {
+            try {
+                const raw = await getUserData(DATA_KEY);
+                setShoppingList(raw as Item[]);
+            } catch { }
+        })();
+    }, []);
+
+    function addToShoppingList(item: Item) {
+        if (!item.name || item.name.trim() === '') return;
+        setShoppingList(prev => {
+            const normalized = normalizeName(item.name);
+            if (prev.some(x => normalizeName(x.name) === normalized)) return prev;
+            const next: Item[] = [...prev, { ...item, name: item.name.trim() }];
+            try { saveUserData(DATA_KEY, JSON.stringify(next)); } catch (e) { }
+            return next;
+        });
     }
 
-    function removeFromShoppingList(element: string) {
-        try {
-            const name = (element ?? '').trim();
-            if (!name) return;
-            const list = getShoppingListCoockie();
-            const next = list.filter(item => item !== name);
-            if (authed) {
-                void saveShoppingListDb(next);
-            } else {
-                setListCookie(next);
-            }
-        } catch (e) {
-            // ignore
-        }
-        setshoppingListUpdated(!shoppingListUpdated)
+    function removeFromShoppingList(item: Item) {
+        setShoppingList(prev => {
+            const target = normalizeName(item.name);
+            const next = prev.filter(i => normalizeName(i.name) !== target);
+            try { saveUserData(DATA_KEY, JSON.stringify(next)); } catch (e) { }
+            return next;
+        });
     }
 
-    function shoppingListHas(element: string): boolean {
-        try {
-            const name = (element ?? '').trim();
-            if (!name) return false;
-            const list = getShoppingListCoockie();
-            return list.includes(name);
-        } catch (e) {
-            return false;
-        }
+    function shoppingListHas(item: Item): boolean {
+        const target = normalizeName(item.name);
+        return shoppingList.some(i => normalizeName(i.name) === target);
     }
 
     function decreasePortions() {
@@ -147,90 +104,61 @@ export function RecipeDetail() {
         }
     }
 
+    async function fetchDetails() {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await fetch('/api/recipeById', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id }),
+            });
+            if (!res.ok) throw new Error(`API returned ${res.status}`);
+            const data: any = await res.json();
+
+            if (!data || (!data.recipe_id && !data.recipe_ID && !data.id)) {
+                setSelected(null);
+                return;
+            }
+
+            const ingredients: Ingredient[] = (data.ingredients || []).map((ing: any, idx: number) => new Ingredient(
+                ing.ingredient_name ?? ing.name ?? '',
+                idx,
+                ing.amount,
+                ing.unit,
+                false
+            ));
+
+            const steps: Step[] = (data.steps || []).map((s: any, idx: number) => new Step(
+                s.step_number ?? s.number ?? 0,
+                s.instruction ?? s.description ?? '',
+                undefined,
+                s.step_ID ?? idx
+            ));
+
+            setSelected(new Recipe(
+                data.recipe_name ?? data.Name ?? data.name ?? '',
+                ingredients,
+                data.id ?? data.recipe_id ?? data.recipe_ID ?? undefined,
+                data.recipe_description ?? data.Description ?? data.description ?? undefined,
+                steps ?? undefined
+            ));
+
+        } catch (err) {
+            setError(err instanceof Error ? err.message : String(err));
+        } finally {
+            setLoading(false);
+        }
+    }
+
     useEffect(() => {
         if (id == null) {
             setSelected(null);
             setError(null);
             return;
         }
-
-        let cancelled = false;
-
-        async function fetchDetails() {
-            setLoading(true);
-            setError(null);
-            try {
-                const res = await fetch('/api/recipeById', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id }),
-                });
-                if (!res.ok) throw new Error(`API returned ${res.status}`);
-                const data: any = await res.json();
-
-                if (cancelled) return;
-
-                if (!data || (!data.recipe_id && !data.recipe_ID && !data.id)) {
-                    setSelected(null);
-                    return;
-                }
-
-                const ingredients: Ingredient[] = (data.ingredients || []).map((ing: any, idx: number) => new Ingredient(
-                    ing.ingredient_name ?? ing.name ?? '',
-                    idx,
-                    ing.amount,
-                    ing.unit,
-                    false
-                ));
-
-                const steps: Step[] = (data.steps || []).map((s: any, idx: number) => new Step(
-                    s.step_number ?? s.number ?? 0,
-                    s.instruction ?? s.description ?? '',
-                    undefined,
-                    s.step_ID ?? idx
-                ));
-
-                setSelected(new Recipe(
-                    data.recipe_name ?? data.Name ?? data.name ?? '', 
-                    ingredients, 
-                    data.id ?? data.recipe_id ?? data.recipe_ID ?? undefined, 
-                    data.recipe_description ?? data.Description ?? data.description ?? undefined, 
-                    steps ?? undefined
-                ));
-
-            } catch (err) {
-                if (!cancelled) setError(err instanceof Error ? err.message : String(err));
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        }
-
         fetchDetails();
-
-        return () => { cancelled = true; };
     }, [id]);
-
-    // Check session and, if authenticated, overwrite cookie with DB shopping list
-    useEffect(() => {
-        (async () => {
-            try {
-                const res = await fetch('/api/auth/session');
-                const j = await res.json();
-                setAuthed(!!j.authenticated);
-                if (j.authenticated) {
-                    try {
-                        const r = await fetch('/api/user/data?key=' + encodeURIComponent('shoppingList'));
-                        if (r.ok) {
-                            const d = await r.json();
-                            if (Array.isArray(d.value)) {
-                                setShoppingCookie('shoppingList', JSON.stringify(d.value), 30);
-                            }
-                        }
-                    } catch {}
-                }
-            } catch {}
-        })();
-    }, []);
 
     const time = new Date();
     time.setSeconds(time.getSeconds() + 600);
@@ -296,17 +224,18 @@ export function RecipeDetail() {
 
                                 <tbody className="tbody">
                                     {selected.ingredients.map((i, idx) => {
+                                        const name = formatItemName(i, portions);
                                         return (
                                             <tr key={idx} className="tr">
                                                 <td className="td">{(i.amount ?? 0) * portions} {i.unit}</td>
                                                 <td className="td" style={{ display: 'flex', alignItems: 'center' }}>
                                                     <span className="ingredientName">{i.name}</span>
-                                                    {shoppingListHas((i.amount ? i.amount * portions : "") + " " + i.unit + " " + i.name) ? (
-                                                        <button onClick={() => removeFromShoppingList((i.amount ? i.amount * portions : "") + " " + i.unit + " " + i.name)} aria-label={`Remove ${i.name} from shopping list`} style={{ marginLeft: "auto" }}>
+                                                    {shoppingListHas({ name }) ? (
+                                                        <button onClick={() => removeFromShoppingList({name})} aria-label={`Remove ${i.name} from shopping list`} style={{ marginLeft: "auto" }}>
                                                             <Trash2 />
                                                         </button>
                                                     ) : (
-                                                        <button onClick={() => addToShoppingList((i.amount ? i.amount * portions : "") + " " + i.unit + " " + i.name)} aria-label={`Add ${i.name} to shopping list`} style={{ marginLeft: "auto" }}>
+                                                            <button onClick={() => addToShoppingList({ name })} aria-label={`Add ${i.name} to shopping list`} style={{ marginLeft: "auto" }}>
                                                             <ShoppingCart />
                                                         </button>
                                                     )}
