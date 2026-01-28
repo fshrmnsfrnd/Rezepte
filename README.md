@@ -22,7 +22,8 @@ services:
       - ./db.db:/app/db.db
       - ./auth.db/auth.db
     environment:
-      - EXT_API_KEY=Your_API_Key_Here
+      - EXT_API_KEY=YOUR_API_EYy_HERE
+      - JWT_SECRET=YOUR:JWT_SECRET_HERE
     restart: always
 ```
 
