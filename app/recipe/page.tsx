@@ -43,7 +43,8 @@ export function RecipeDetail() {
 
     const DATA_KEY = 'shoppingList';
 
-    const normalizeName = (name: string) => name.trim().toLowerCase();
+    // Defensive normalization in case a stored item has no name
+    const normalizeName = (name?: string) => (name ?? '').trim().toLowerCase();
 
     const formatItemName = (ingredient: Ingredient, currentPortions: number) => {
         const amount = ingredient.amount ? ingredient.amount * currentPortions : '';
@@ -63,7 +64,7 @@ export function RecipeDetail() {
     }, []);
 
     function addToShoppingList(item: Item) {
-        if (!item.name || item.name.trim() === '') return;
+        if (!item?.name || item.name.trim() === '') return;
         setShoppingList(prev => {
             const normalized = normalizeName(item.name);
             if (prev.some(x => normalizeName(x.name) === normalized)) return prev;
@@ -74,6 +75,7 @@ export function RecipeDetail() {
     }
 
     function removeFromShoppingList(item: Item) {
+        if (!item?.name) return;
         setShoppingList(prev => {
             const target = normalizeName(item.name);
             const next = prev.filter(i => normalizeName(i.name) !== target);
@@ -83,8 +85,9 @@ export function RecipeDetail() {
     }
 
     function shoppingListHas(item: Item): boolean {
-        const target = normalizeName(item.name);
-        return shoppingList.some(i => normalizeName(i.name) === target);
+        const target = normalizeName(item?.name);
+        if (!target) return false;
+        return shoppingList.some(i => normalizeName(i?.name) === target);
     }
 
     function decreasePortions() {
