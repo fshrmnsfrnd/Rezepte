@@ -46,3 +46,6 @@ auth.db
 #local tests
 /resources/json/*
 #/resources/markdown/*
+
+*.env*
+.env

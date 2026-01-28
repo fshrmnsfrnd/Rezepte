@@ -227,7 +227,7 @@ export function RecipeDetail() {
                                         const name = formatItemName(i, portions);
                                         return (
                                             <tr key={idx} className="tr">
-                                                <td className="td">{(i.amount ?? 0) * portions} {i.unit}</td>
+                                                <td className="td">{i.amount ? (i.amount ?? 0) * portions : ""} {i.unit}</td>
                                                 <td className="td" style={{ display: 'flex', alignItems: 'center' }}>
                                                     <span className="ingredientName">{i.name}</span>
                                                     {shoppingListHas({ name }) ? (
