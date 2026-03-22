@@ -15,6 +15,8 @@ type NavLink = {
 export default function Header() {
     const [authed, setAuthed] = useState<boolean>(false);
     const [login, setLogin] = useState<boolean>(false);
+    const [open, setOpen] = useState(false);
+    let loading:boolean = true //Damit der Login Button beim laden nicht angezeigt wird
 
     // Check user session for DB-backed persistence
     useEffect(() => {
@@ -23,7 +25,8 @@ export default function Header() {
                 const res = await fetch('/api/auth/session');
                 const j = await res.json();
                 setAuthed(!!j.authenticated);
-            } catch { }
+                loading = false
+            } catch(e) {console.error(e) }
         })();
     }, []);
 
@@ -32,8 +35,6 @@ export default function Header() {
         { href: "/stats", label: "Statistiken", Icon: BarChart3 },
         { href: "/user", label: "Account", Icon: UserRound }
     ], []);
-
-    const [open, setOpen] = useState(false);
 
     return (
         <>
@@ -58,7 +59,7 @@ export default function Header() {
                         </nav>
 
                         <div className="header-actions">
-                            {!authed && (
+                            {!authed && !loading && (
                                 <button
                                     className="button"
                                     onClick={() => setLogin(true)}
@@ -135,7 +136,10 @@ export default function Header() {
                         >
                             <X size={18} />
                         </button>
-                        <Login />
+                        <Login loggedInObserver={()=>{
+                            setLogin(false);
+                            setAuthed(true);
+                        }}/>
                     </div>
                 </div>
             )}

@@ -7,6 +7,7 @@ import { Recipe, Ingredient, Step } from "@/lib/RecipeDAO";
 import Header from "@/components/Header"
 import { Item } from "@/app/shoppingList/page";
 import { saveUserData, getUserData } from "@/lib/utils";
+import { normalize } from "path";
 
 export default function RecipeWrapper() {
     return (
@@ -43,7 +44,6 @@ export function RecipeDetail() {
 
     const DATA_KEY = 'shoppingList';
 
-    // Defensive normalization in case a stored item has no name
     const normalizeName = (name?: string) => (name ?? '').trim().toLowerCase();
 
     const formatItemName = (ingredient: Ingredient, currentPortions: number) => {
@@ -105,6 +105,17 @@ export function RecipeDetail() {
         } else {
             setPortions(portions + 1);
         }
+    }
+
+    function normalizeAmount(amount: string|number|null|undefined):String{
+        let amountNumber:number
+        if(!amount) return ""
+        if(typeof amount === "string"){
+            amountNumber = parseFloat(amount)
+        }else{
+            amountNumber = amount
+        }
+        return (Math.round((amountNumber * portions) * 100) / 100).toString()
     }
 
     async function fetchDetails() {
@@ -182,7 +193,7 @@ export function RecipeDetail() {
                         <h3 className="h3">Zutaten</h3>
                         <div className="ingredientsContainer" style={{display: "inline-block", justifyItems: "center"}}>
                             <div className="portionsDiv centered-row" style={{ marginBottom: 12, justifyItems: "center"}}>
-                                <label className="label">Portionen:</label>
+                                <label className="label" style={{marginRight: 5}}>Portionen:</label>
                                 <div>
                                     <button
                                         id="decreaseAmount"
@@ -200,7 +211,7 @@ export function RecipeDetail() {
                                         style={{ margin: "0 6px 0 6px"}}
                                         value={portions ?? 1}
                                         onChange={(e) => {
-                                            const n = parseInt(e.target.value, 10);
+                                            const n = parseFloat(e.target.value);
                                             setPortions(Number.isFinite(n) ? n : 0);
                                         }}
                                         aria-label="Anzahl fehlender Zutaten"
@@ -230,7 +241,7 @@ export function RecipeDetail() {
                                         const name = formatItemName(i, portions);
                                         return (
                                             <tr key={idx} className="tr">
-                                                <td className="td">{i.amount ? (i.amount ?? 0) * portions : ""} {i.unit}</td>
+                                                <td className="td">{normalizeAmount(i.amount)} {i.unit}</td>
                                                 <td className="td" style={{ display: 'flex', alignItems: 'center' }}>
                                                     <span className="ingredientName">{i.name}</span>
                                                     {shoppingListHas({ name }) ? (

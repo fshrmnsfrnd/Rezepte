@@ -3,13 +3,17 @@ import React, { useEffect, useState } from "react";
 import Header from "@/components/Header"
 import { checkSession, register, login, logout } from "@/lib/UserDAO"
 
-export default function Login() {
+export default function Login({loggedInObserver = ()=>{}}) {
     const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [authenticated, setAuthenticated] = useState<boolean | null>(null);
     const [currentUsername, setCurrentUsername] = useState<string>("");
     const [error, setError] = useState<string>("");
     const [message, setMessage] = useState<string>("");
+
+    useEffect(() => {
+        if (authenticated) loggedInObserver();
+    }, [authenticated]);
 
     useEffect(() => {
         checkSessionStatus();
@@ -45,6 +49,7 @@ export default function Login() {
             setCurrentUsername(username);
             setUsername("");
             setPassword("");
+            loggedInObserver();
         } else {
             setError(result.error || "Fehler bei der Anmeldung");
         }
