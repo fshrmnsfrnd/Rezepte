@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect, type ComponentType } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { BarChart3, Menu, ShoppingBasket, UserRound, X } from "lucide-react";
+import { useSession } from "@/lib/auth-client"
 import "./landingpage.css";
 import Login from "@/components/Login"
 
@@ -13,22 +14,9 @@ type NavLink = {
 };
 
 export default function Header() {
-    const [authed, setAuthed] = useState<boolean>(false);
-    const [login, setLogin] = useState<boolean>(false);
-    const [open, setOpen] = useState(false);
-    let loading:boolean = true //Damit der Login Button beim laden nicht angezeigt wird
-
-    // Check user session for DB-backed persistence
-    useEffect(() => {
-        (async () => {
-            try {
-                const res = await fetch('/api/auth/session');
-                const j = await res.json();
-                setAuthed(!!j.authenticated);
-                loading = false
-            } catch(e) {console.error(e) }
-        })();
-    }, []);
+    const [loginOpen, setLoginOpen] = useState(false);
+    const [sideBarOpen, setSideBarOpen] = useState(false);
+    const { data: session, isPending } = useSession();
 
     const links = useMemo<NavLink[]>(() => [
         { href: "/shoppingList", label: "Einkaufsliste", Icon: ShoppingBasket },
@@ -49,7 +37,6 @@ export default function Header() {
                             marginLeft: "auto",
                         }}
                     >
-        
                         <nav className="nav-links" aria-label="Hauptnavigation">
                             {links.map(({ href, label }) => (
                                 <a key={href} className="nav-link" href={href}>
@@ -57,19 +44,23 @@ export default function Header() {
                                 </a>
                             ))}
                         </nav>
-
+                        
                         <div className="header-actions">
-                            {!authed && !loading && (
+                            
+                            {/*Login Button - nur wenn nicht angemeldet und nicht am Laden*/}
+                            {!isPending && !session?.user && (
                                 <button
                                     className="button"
-                                    onClick={() => setLogin(true)}
+                                    onClick={() => setLoginOpen(true)}
                                     aria-label="Login öffnen"
                                 >
                                     Login
                                 </button>
                             )}
 
-                            <Dialog.Root open={open} onOpenChange={setOpen}>
+                            {/*Sidebar*/}
+                            <Dialog.Root open={sideBarOpen} onOpenChange={setSideBarOpen}>
+                                {/*Burger Button*/}
                                 <Dialog.Trigger asChild>
                                     <button
                                         type="button"
@@ -102,7 +93,7 @@ export default function Header() {
                                                     key={href}
                                                     className="sheet-link"
                                                     href={href}
-                                                    onClick={() => setOpen(false)}
+                                                    onClick={() => setLoginOpen(false)}
                                                 >
                                                     <Icon size={18} aria-hidden />
                                                     <span>{label}</span>
@@ -117,12 +108,13 @@ export default function Header() {
                 </div>
             </header>
 
-            {login && !authed && (
+            {/*Login Overlay Panel - nur wenn nicht angemeldet, nicht am Laden, und Overlay offen*/}
+            {!isPending && !session?.user && loginOpen && (
                 <div
                     className="login-overlay"
                     role="dialog"
                     aria-modal="true"
-                    onClick={() => setLogin(false)}
+                    onClick={() => setLoginOpen(false)}
                 >
                     <div
                         className="login-modal"
@@ -132,13 +124,12 @@ export default function Header() {
                             type="button"
                             className="login-close"
                             aria-label="Login schließen"
-                            onClick={() => setLogin(false)}
+                            onClick={() => setLoginOpen(false)}
                         >
                             <X size={18} />
                         </button>
                         <Login loggedInObserver={()=>{
-                            setLogin(false);
-                            setAuthed(true);
+                            setLoginOpen(false)
                         }}/>
                     </div>
                 </div>

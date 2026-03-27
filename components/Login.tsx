@@ -5,7 +5,6 @@ import { useSession } from "@/lib/auth-client";
 import "./Login.css"
 
 export default function Login({ loggedInObserver = () => { } }) {
-    const [authenticated, setAuthenticated] = useState<boolean | null>(null);
     const [mode, setMode] = useState<"signin" | "signup">("signin");
     const [emailOrUsername, setEmailOrUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
@@ -14,8 +13,6 @@ export default function Login({ loggedInObserver = () => { } }) {
     const [error, setError] = useState<string | null>(null);
     const [info, setInfo] = useState<string | null>(null);
     const {data: session} = useSession();
-
-    console.log(session)
 
     useEffect(() => {
         if (session) loggedInObserver();
@@ -138,7 +135,7 @@ export default function Login({ loggedInObserver = () => { } }) {
                                     <span>Benutzername</span>
                                     <input
                                         type="text"
-                                        placeholder="z. B. nico"
+                                        placeholder="Username"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
                                         required
@@ -158,7 +155,7 @@ export default function Login({ loggedInObserver = () => { } }) {
                             </label>
 
                             <button className="primary" type="submit" disabled={loading}>
-                                {loading ? "Wird gesendet..." : mode === "signin" ? "Anmelden" : "Registrieren"}
+                                {loading ? "Loading..." : mode === "signin" ? "Anmelden" : "Registrieren"}
                             </button>
                         </form>
 

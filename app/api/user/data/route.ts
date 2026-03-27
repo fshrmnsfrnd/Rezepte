@@ -1,24 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
 
 export async function GET(request: NextRequest) {
     try {
         const key = request.nextUrl.searchParams.get("key");
-        if (!key) {
-            return NextResponse.json({ error: "missing key" }, { status: 400 });
-        }
+        if (!key) {return NextResponse.json({ error: "missing key" }, { status: 400 });}
 
-        const token = request.cookies.get("auth-token")?.value;
-        if (!token) {
-            return NextResponse.json({ value: null }, { status: 200 });
-        }
+        const session = await auth.api.getSession({ headers: request.headers });
+        if(!session?.user?.id){return NextResponse.json({ error: "No User ID or Session" }, { status: 401 });}
 
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
-
-        const row = await db.get("SELECT Value FROM UserData WHERE User_ID = ? AND Key = ?", [decoded.userId, key]);
+        const row = await db.get("SELECT Value FROM UserData WHERE User_ID = ? AND Key = ?", [session.user.id, key]);
 
         if (!row) {
             return NextResponse.json({ value: null }, { status: 200 });
@@ -36,30 +28,27 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const token = request.cookies.get("auth-token")?.value;
-        if (!token) {
-            return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
-        }
 
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
+        const session = await auth.api.getSession({ headers: request.headers });
+        if(!session?.user?.id){return NextResponse.json({ error: "No User ID or Session" }, { status: 401 });}
+
         const body = await request.json();
         const { key, value } = body as { key?: string; value: any };
 
-        if (!key) {
-            return NextResponse.json({ error: "missing key" }, { status: 400 });
-        }
+        if (!key) {return NextResponse.json({ error: "missing key" }, { status: 400 });}
 
         const valueStr = JSON.stringify(value);
 
-        const existing = await db.get("SELECT 1 FROM UserData WHERE User_ID = ? AND Key = ?", [decoded.userId, key]);
+        const existing = await db.get("SELECT 1 FROM UserData WHERE User_ID = ? AND Key = ?", [session.user.id, key]);
         if (existing) {
-            await db.run("UPDATE UserData SET Value = ? WHERE User_ID = ? AND Key = ?", [valueStr, decoded.userId, key]);
+            await db.run("UPDATE UserData SET Value = ? WHERE User_ID = ? AND Key = ?", [valueStr, session.user.id, key]);
         } else {
-            await db.run("INSERT INTO UserData (User_ID, Key, Value) VALUES (?, ?, ?)", [decoded.userId, key, valueStr]);
+            await db.run("INSERT INTO UserData (User_ID, Key, Value) VALUES (?, ?, ?)", [session.user.id, key, valueStr]);
         }
 
         return NextResponse.json({ success: true, value }, { status: 200 });
     } catch (err) {
+        console.log(err)
         return NextResponse.json({ error: "server error" }, { status: 500 });
     }
 }
