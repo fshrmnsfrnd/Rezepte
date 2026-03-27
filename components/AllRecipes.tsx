@@ -9,8 +9,6 @@ type Props = {
     searchTerm?: string | null;
 };
 
-// Use domain classes elsewhere; API rows are treated as untyped objects here.
-
 function RecipeIngredients({ recipeID }: { recipeID: number }) {
     const [ings, setIngs] = useState<any[] | null>(null);
     const [loading, setLoading] = useState(false);

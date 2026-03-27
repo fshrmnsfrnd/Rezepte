@@ -52,24 +52,16 @@ await db.exec(`
         FOREIGN KEY (Category_ID) REFERENCES Category(Category_ID)
     );
 
-    -- User related tables
-    CREATE TABLE IF NOT EXISTS User (
-        User_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-        Username TEXT UNIQUE NOT NULL,
-        Password TEXT NOT NULL
-    );
-
+    -- User related tables (User_ID references better-auth users)
     CREATE TABLE IF NOT EXISTS User_Cart (
-        User_ID INTEGER,
-        Item INTEGER,
-        FOREIGN KEY (User_ID) REFERENCES User(User_ID)
+        User_ID TEXT,
+        Item INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS UserData (
-        User_ID INTEGER,
+        User_ID TEXT,
         Key TEXT,
         Value TEXT,
-        UNIQUE(User_ID, Key),
-        FOREIGN KEY (User_ID) REFERENCES User(User_ID)
+        UNIQUE(User_ID, Key)
     );
 `);

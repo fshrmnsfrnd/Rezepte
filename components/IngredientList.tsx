@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import "./landingpage.css";
 import { Recipe, Ingredient, Step, Category } from "@/lib/RecipeDAO";
 import { saveUserData, getUserData } from "@/lib/utils";
+import { useSession } from "@/lib/auth-client";
 
 type Props = {
     onFilterChange?: (recipeIds: number[] | null, source: 'ingredients' | 'categories') => void;
@@ -17,20 +18,9 @@ export default function IngredientList({ onFilterChange, searchTerm, amountMissi
     const [ingredients, setIngredients] = useState<Ingredient[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-    const [authed, setAuthed] = useState<boolean>(false);
+    const {data: session} = useSession();
 
     const DATA_KEY = 'selectedIngredients';
-
-    // Check user session for DB-backed persistence
-    useEffect(() => {
-        (async () => {
-            try {
-                const res = await fetch('/api/auth/session');
-                const j = await res.json();
-                setAuthed(!!j.authenticated);
-            } catch { }
-        })();
-    }, []);
 
     async function loadRecipes(): Promise<void> {
         setError(null);
@@ -120,7 +110,7 @@ export default function IngredientList({ onFilterChange, searchTerm, amountMissi
                 if (restored.length > 0) setSelectedIds(new Set(restored));
             } catch {}
         })();
-    }, [ingredients, authed]);
+    }, [ingredients, session?.user.name]);
 
     // Clear selection when parent requests it via clearSignal
     useEffect(() => {

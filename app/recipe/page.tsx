@@ -24,23 +24,11 @@ export function RecipeDetail() {
     const [id, setId] = useState<number | null>(null);
     const [shoppingList, setShoppingList] = useState<Item[]>([]);
     const [portions, setPortions] = useState<number>(1);
-    const [authed, setAuthed] = useState<boolean>(false);
     const params = useSearchParams()
 
     useEffect(() => {
         setId(params.get("recipeID") ? parseInt(params.get("recipeID")!, 10) : null);
     }, [params]);
-
-    // Check user session for DB-backed persistence
-    useEffect(() => {
-        (async () => {
-            try {
-                const res = await fetch('/api/auth/session');
-                const j = await res.json();
-                setAuthed(!!j.authenticated);
-            } catch { }
-        })();
-    }, []);
 
     const DATA_KEY = 'shoppingList';
 
