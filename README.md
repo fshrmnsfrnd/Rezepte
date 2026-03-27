@@ -14,19 +14,19 @@ Dieses Repository enthält eine kleine Next.js App mit:
 
 ```yaml
 services:
-  recipes:
-    container_name: recipes
-    image: fshrmnsfrnd/recipes:latest
-    ports:
-        - 3000:3000
-    volumes:
-        - /path/to/md/recipes:/app/resources/Markdown
-        - ./db.db:/app/db.db
-        - ./betterAuth.db:/app/betterAuth.db
-    environment:
-        - BETTER_AUTH_SECRET=YOUR_SECRET_HERE
-        - BETTER_AUTH_URL=http://localhost:3000 # Base URL of your app
-    restart: always
+    recipes:
+        container_name: recipes
+        image: fshrmnsfrnd/recipes:latest
+        ports:
+            - 3000:3000
+        volumes:
+            - /path/to/md/recipes:/app/resources/Markdown
+            - ./db.db:/app/db.db
+            - ./betterAuth.db:/app/betterAuth.db
+        environment:
+            - BETTER_AUTH_SECRET=YOUR_SECRET_HERE
+            - BETTER_AUTH_URL=http://localhost:3000 # Base URL of your app
+        restart: always
 ```
 
 ---
