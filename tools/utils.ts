@@ -1,4 +1,3 @@
-/*
 export function authorize(providedKey: string | null): boolean{
         const expectedKey: string | undefined = process.env.API_KEY;
     
@@ -19,7 +18,6 @@ export function authorize(providedKey: string | null): boolean{
 
         return true;
 }
-*/
 
 export function getIntersection<T>(...arrays: T[][]): T[] {
     if (arrays.length === 0) {
