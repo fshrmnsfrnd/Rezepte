@@ -42,6 +42,7 @@ package-lock.json
 #database
 db.db
 auth.db
+betterAuth.db
 
 #local tests
 /resources/json/*
