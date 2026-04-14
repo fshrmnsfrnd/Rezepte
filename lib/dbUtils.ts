@@ -28,7 +28,8 @@ export async function withTransaction<T>(fn: () => Promise<T>): Promise<T> {
 export async function recipeExists(name: string): Promise<{ exists: boolean; id?: number, name?: string }> {
 	const trimmed = (name || '').trim();
 	if (!trimmed) return { exists: false };
-	const row = await db.get(`SELECT Recipe_ID AS id, Name as name FROM Recipe WHERE Name = ? COLLATE NOCASE`, [trimmed]);
+	const row = await db.get(`SELECT Recipe_ID AS id, Name as name FROM Recipe WHERE Name = ? COLLATE NOCASE`, [trimmed]) as { id: number; name: string } | undefined;
+	
 	if (!row || !row.id) return { exists: false };
 	return { exists: true, id: row.id, name: row.name };
 }
@@ -40,7 +41,7 @@ export async function getRecipeIdByName(name: string): Promise<number | null> {
 
 export async function ensureIngredient(name: string): Promise<number> {
 	const trimmed = (name || '').trim();
-	const existing = await db.get(`SELECT Ingredient_ID AS id FROM Ingredient WHERE Name = ? COLLATE NOCASE`, [trimmed]);
+	const existing = await db.get(`SELECT Ingredient_ID AS id FROM Ingredient WHERE Name = ? COLLATE NOCASE`, [trimmed]) as { id: number } | undefined;
 	if (existing && existing.id) return existing.id;
 	const res = await db.run(`INSERT INTO Ingredient (Name) VALUES (?)`, [trimmed]);
 	return res.lastID as number;
@@ -48,7 +49,7 @@ export async function ensureIngredient(name: string): Promise<number> {
 
 export async function ensureCategory(name: string): Promise<number> {
 	const trimmed = (name || '').trim();
-	const existing = await db.get(`SELECT Category_ID AS id FROM Category WHERE Name = ? COLLATE NOCASE`, [trimmed]);
+	const existing = await db.get(`SELECT Category_ID AS id FROM Category WHERE Name = ? COLLATE NOCASE`, [trimmed]) as { id: number } | undefined;
 	if (existing && existing.id) return existing.id;
 	const res = await db.run(`INSERT INTO Category (Name) VALUES (?)`, [trimmed]);
 	return res.lastID as number;
@@ -74,13 +75,13 @@ async function _removeRecipeImpl(recipeId: number): Promise<void> {
 
 async function addRecipe(recipe: Recipe): Promise<{ recipeID: number }> {
 	//Add Recipe
-	const res = await db.run(`INSERT INTO Recipe(Name, Description)VALUES(?, ?)`, [recipe.name, recipe.description]);
+	const res = await db.run(`INSERT INTO Recipe(Name, Description)VALUES(?, ?)`, [recipe.name, recipe.description ?? '']);
 	const recipeID: number = res.lastID as number;
 	//Get Ingredient IDs and add missing and add Links
 	for (let ing of recipe.ingredients) {
 		ing.ingredient_ID = await ensureIngredient(ing.name);
 		await db.run(`INSERT INTO Recipe_Ingredient(Recipe_ID, Ingredient_ID, Amount, Unit, Optional)VALUES(?, ?, ?, ?, ?)`,
-			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional ?? 0]);
+			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional ? 1 : 0]);
 	}
 	//Get Category IDs and add missing
 	if(recipe.categories){
@@ -93,7 +94,7 @@ async function addRecipe(recipe: Recipe): Promise<{ recipeID: number }> {
 	if (recipe.steps) {
 		for (let step of recipe.steps) {
 			await db.run(`INSERT INTO Step(Recipe_ID, Number, Description, Duration)VALUES(?, ?, ?, ?)`,
-				[recipeID, step.number, step.description, step.duration]);
+				[recipeID, step.number, step.description, step.duration ?? null]);
 		}
 	}
 	return { recipeID }
@@ -113,13 +114,13 @@ async function updateRecipe(newRecipe: Recipe, recipeID: number): Promise<boolea
 		ing.ingredient_ID = await ensureIngredient(ing.name);
 		//Add links to Ingredients
 		await db.run(`INSERT INTO Recipe_Ingredient(Recipe_ID, Ingredient_ID, Amount, Unit, Optional)VALUES(?, ?, ?, ?, ?)`,
-			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional ?? 0]);
+			[recipeID, ing.ingredient_ID, ing.amount, ing.unit, ing.optional ? 1 : 0]);
 	}
 	//Add Steps
 	if (newRecipe.steps) {
 		for (let step of newRecipe.steps) {
 			await db.run(`INSERT INTO Step(Recipe_ID, Number, Description, Duration)VALUES(?, ?, ?, ?)`,
-				[recipeID, step.number, step.description, step.duration]);
+				[recipeID, step.number, step.description, step.duration ?? null]);
 		}
 	}
 	//Add Categories
@@ -214,7 +215,7 @@ export async function getRecipeById(id: number): Promise<Recipe | null> {
 		`SELECT Recipe_ID AS recipe_ID, Name AS name, Description AS description
 		 FROM Recipe WHERE Recipe_ID = ?`,
 		[id]
-	);
+	) as { recipe_ID: number; name: string; description: string } | undefined;
 	if (!recipeRow) return null;
 
 	const ingredientsRows = await db.all(
@@ -277,7 +278,7 @@ export async function filterRecipesByIngredients(providedIds: number[], acceptMi
 		FROM Recipe_Ingredient RI
 		WHERE RI.Optional = 0
 		ORDER BY RI.Recipe_ID;
-	`);
+	`) as Array<{ Recipe_ID: number; Ingredient_ID: number }>;
 
 	const recipeMap = new Map<number, number[]>();
 	for (const row of dbRes) {
@@ -332,8 +333,9 @@ export async function getIngredientById(id: number): Promise<Ingredient | null>{
 	const row = await db.get(
 		`SELECT I.Ingredient_ID AS ingredient_ID, I.Name AS name
 		FROM Ingredient I
-		WHERE I.Ingredient_ID = ?;`, id
-	);
+		WHERE I.Ingredient_ID = ?;`,
+		[id]
+	) as { ingredient_ID: number; name: string } | undefined;
 	if (!row) return null;
 	return new Ingredient(row.name ?? '', row.ingredient_ID ?? undefined);
 }

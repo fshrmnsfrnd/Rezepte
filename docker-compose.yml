@@ -2,15 +2,18 @@
 services:
   recipes:
     container_name: recipes
+    image: fshrmnsfrnd/recipes:latest
     build:
       context: .
       dockerfile: Dockerfile
-    image: recipes:local
     ports:
       - 3000:3000
     volumes:
-      - ./resources/Markdown:/app/resources/Markdown
+      - /path/to/md/recipes:/app/resources/Markdown
+      - ./db.db:/app/db.db
+      - ./betterAuth.db:/app/betterAuth.db
     environment:
-      - EXT_API_KEY=Your_API_Key_Here
-      - JWT_SECRET=Your_JWT_Secret_Here
+      - API_KEY=API_KEY_HERE
+      - BETTER_AUTH_SECRET=YOUR_SECRET_HERE
+      - BETTER_AUTH_URL=http://localhost:3000
     restart: always

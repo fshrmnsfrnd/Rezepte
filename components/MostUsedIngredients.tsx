@@ -1,5 +1,5 @@
 'use client'
-import React, { Suspense, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export function MostUsedIngredients() {
     const [ingredients, setIngredients] = useState<any[]>();

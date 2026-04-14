@@ -1,13 +1,34 @@
-import sqlite3 from "sqlite3";
-import { open } from "sqlite";
+import Database from "better-sqlite3";
 import path from "path";
 
 const dbPath = path.join(process.cwd(), "db.db");
 
-export const db = await open({
-    filename: dbPath,
-    driver: sqlite3.Database,
-});
+const database = new Database(dbPath);
+database.pragma("foreign_keys = ON");
+
+function normalizeParams(params?: unknown[] | Record<string, unknown>) {
+    if (params === undefined) return [];
+    return Array.isArray(params) ? params : [params];
+}
+
+export const db = {
+    async exec(sql: string): Promise<void> {
+        database.exec(sql);
+    },
+    async run(sql: string, params?: unknown[] | Record<string, unknown>) {
+        const result = database.prepare(sql).run(...normalizeParams(params));
+        return {
+            lastID: Number(result.lastInsertRowid),
+            changes: result.changes,
+        };
+    },
+    async get(sql: string, params?: unknown[] | Record<string, unknown>) {
+        return database.prepare(sql).get(...normalizeParams(params));
+    },
+    async all(sql: string, params?: unknown[] | Record<string, unknown>) {
+        return database.prepare(sql).all(...normalizeParams(params));
+    },
+};
 
 await db.exec(`
     CREATE TABLE IF NOT EXISTS Recipe (

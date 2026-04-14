@@ -46,7 +46,7 @@ betterAuth.db
 
 #local tests
 /resources/json/*
-#/resources/markdown/*
+#/resources/Markdown/*
 
 *.env*
 .env

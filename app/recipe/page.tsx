@@ -1,13 +1,12 @@
 'use client'
-import { useParams, useSearchParams } from "next/navigation";
-import React, { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import Timer from "@/components/Timer";
 import { ShoppingCart, Trash2 } from "lucide-react";
 import { Recipe, Ingredient, Step } from "@/lib/RecipeDAO";
 import Header from "@/components/Header"
 import { Item } from "@/app/shoppingList/page";
 import { saveUserData, getUserData } from "@/lib/utils";
-import { normalize } from "path";
 
 export default function RecipeWrapper() {
     return (

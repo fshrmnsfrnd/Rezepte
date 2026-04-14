@@ -10,16 +10,16 @@ export async function GET(request: NextRequest) {
         const session = await auth.api.getSession({ headers: request.headers });
         if(!session?.user?.id){return NextResponse.json({ error: "No User ID or Session" }, { status: 401 });}
 
-        const row = await db.get("SELECT Value FROM UserData WHERE User_ID = ? AND Key = ?", [session.user.id, key]);
+        const row = await db.get("SELECT Value FROM UserData WHERE User_ID = ? AND Key = ?", [session.user.id, key]) as {value: string};
 
         if (!row) {
             return NextResponse.json({ value: null }, { status: 200 });
         }
 
         try {
-            return NextResponse.json({ value: JSON.parse(row.Value) }, { status: 200 });
+            return NextResponse.json({ value: JSON.parse(row.value) }, { status: 200 });
         } catch (e) {
-            return NextResponse.json({ value: row.Value }, { status: 200 });
+            return NextResponse.json({ value: row.value }, { status: 200 });
         }
     } catch (err) {
         return NextResponse.json({ value: null }, { status: 200 });

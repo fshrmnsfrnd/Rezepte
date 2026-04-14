@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
+import * as dotenv from 'dotenv';
+import* as fs from 'fs';
+import * as path from 'path';
 const projectRoot = path.resolve(__dirname, '..');
 const jsonDir = path.join(projectRoot, 'resources', 'json');
 

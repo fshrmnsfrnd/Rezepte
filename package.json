@@ -18,7 +18,7 @@
     "@simplewebauthn/server": "^13.3.0",
     "@types/bcrypt": "^6.0.0",
     "@types/jsonwebtoken": "^9.0.10",
-    "auth": "^1.2.3",
+    "auth": "^1.6.2",
     "bcrypt": "^6.0.0",
     "better-auth": "^1.5.6",
     "better-sqlite3": "^12.8.0",
@@ -32,8 +32,6 @@
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-timer-hook": "^4.0.5",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^6.0.1",
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {

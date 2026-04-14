@@ -10,7 +10,6 @@ type Props = {
 
 export default function RandomRecipe({ filterIds}: Props) {
     const [allRecipes, setAllRecipes] = useState<any[] | null>(null);
-    const [possibleRecipesState, setPossibleRecipesState] = useState<any[] | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     async function loadRecipes(): Promise<void> {
