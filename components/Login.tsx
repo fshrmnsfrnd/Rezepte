@@ -127,6 +127,7 @@ export default function Login({ loggedInObserver = () => { } }) {
                                     value={emailOrUsername}
                                     onChange={(e) => setEmailOrUsername(e.target.value)}
                                     required
+                                    autoComplete="username"
                                 />
                             </label>
 

@@ -61,3 +61,7 @@ export async function getUserData(key: string): Promise<Array<any> | undefined> 
     }
     return value;
 }
+
+export function resolveBaseURL(): string | undefined {
+    return process.env.NEXT_PUBLIC_SITE_URL ?? process.env.BETTER_AUTH_URL ?? (typeof window !== "undefined" ? window.location.origin : undefined);
+}
