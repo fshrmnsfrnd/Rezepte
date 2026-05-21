@@ -1,7 +1,29 @@
 import Database from "better-sqlite3";
+import fs from "fs";
 import path from "path";
 
-const dbPath = path.join(process.cwd(), "db.db");
+const DB_FILE = process.env.RECIPE_DB_FILE || "db.db";
+
+function resolveDbPath(): string {
+    const baseDir = process.env.INIT_CWD || process.cwd();
+    const envPath = process.env.REZEPTE_DB_PATH;
+    if (envPath) {
+        return path.isAbsolute(envPath) ? envPath : path.resolve(baseDir, envPath);
+    }
+
+    let dir = baseDir;
+    while (true) {
+        const candidate = path.join(dir, DB_FILE);
+        if (fs.existsSync(candidate)) return candidate;
+        const parent = path.dirname(dir);
+        if (parent === dir) break;
+        dir = parent;
+    }
+
+    return path.join(process.cwd(), DB_FILE);
+}
+
+const dbPath = resolveDbPath();
 
 const database = new Database(dbPath);
 database.pragma("foreign_keys = ON");

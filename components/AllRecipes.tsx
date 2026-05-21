@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import "./landingpage.css";
 import ArrowTrigger from "@/components/ui/ArrowTrigger"
 import { Recipe, Ingredient, Step } from "@/lib/RecipeDAO";
+import { recipeNameToSlug } from "@/lib/recipe-slug";
 
 type Props = {
     filterIds?: number[] | null;
@@ -115,6 +116,10 @@ export default function AllRecipes({ filterIds, searchTerm }: Props) {
                 <div id="recipeList">
                     {visibleFiltered.map((element, idx) => {
                         const recipeID = element.recipe_ID ?? (idx + 1);
+                        const recipeSlug = recipeNameToSlug(element.name ?? "");
+                        const targetHref = recipeSlug
+                            ? `/${encodeURIComponent(recipeSlug)}`
+                            : `/recipe?recipeID=${recipeID}`;
                         return (
                             <div
                                 className="recipePreview"
@@ -124,7 +129,7 @@ export default function AllRecipes({ filterIds, searchTerm }: Props) {
                                         // click intended for accordion/arrow, don't navigate
                                         return;
                                     }
-                                    window.location = `/recipe?recipeID=${recipeID}` as string & Location;
+                                    window.location.href = targetHref;
                                 }}
                                 role="button"
                                 key={recipeID}

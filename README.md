@@ -27,6 +27,7 @@ services:
             - API_KEY=YOUR_KEY # For internal Authentication
             - BETTER_AUTH_SECRET=YOUR_SECRET_HERE
             - BETTER_AUTH_URL=https://YOUR_URL # Base URL of your app
+            - RECIPE_DB_FILE=db.db
 
         restart: always
 ```
