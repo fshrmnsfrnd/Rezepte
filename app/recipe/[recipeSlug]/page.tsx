@@ -1,6 +1,4 @@
 import { notFound } from "next/navigation";
-import fs from "fs";
-import path from "path";
 import { getAllRecipes, getRecipeById } from "@/lib/dbUtils";
 import { recipeNameToSlug } from "@/lib/recipe-slug";
 import RecipeDetailClient, { RecipePayload } from "./RecipeDetailClient";
@@ -54,13 +52,6 @@ function toRecipePayload(recipe: any): RecipePayload {
     };
 }
 
-const CACHE_FILE = path.join(
-    process.env.INIT_CWD || process.cwd(),
-    ".next",
-    "cache",
-    "recipe-static.json"
-);
-
 async function buildRecipeIndex(): Promise<Record<string, RecipePayload>> {
     const recipes = await getAllRecipes();
     const entries = await Promise.all(
@@ -77,21 +68,10 @@ async function buildRecipeIndex(): Promise<Record<string, RecipePayload>> {
     const index = Object.fromEntries(
         entries.filter((entry): entry is readonly [string, RecipePayload] => !!entry)
     );
-    fs.mkdirSync(path.dirname(CACHE_FILE), { recursive: true });
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(index));
     return index;
 }
 
 async function loadRecipeIndex(): Promise<Record<string, RecipePayload>> {
-    if (process.env.NODE_ENV !== "production") {
-        return buildRecipeIndex();
-    }
-
-    if (fs.existsSync(CACHE_FILE)) {
-        const raw = fs.readFileSync(CACHE_FILE, "utf-8");
-        return JSON.parse(raw) as Record<string, RecipePayload>;
-    }
-
     return buildRecipeIndex();
 }
 
@@ -103,11 +83,7 @@ export async function generateStaticParams() {
 export default async function RecipePage({ params }: PageProps) {
     const { recipeSlug } = await params;
     const recipeIndex = await loadRecipeIndex();
-    let recipe = recipeIndex[recipeSlug];
-    if (!recipe) {
-        const refreshedIndex = await buildRecipeIndex();
-        recipe = refreshedIndex[recipeSlug];
-    }
+    const recipe = recipeIndex[recipeSlug];
     if (!recipe) {
         notFound();
     }
