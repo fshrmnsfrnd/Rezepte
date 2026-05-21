@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { importRecipe} from '@/lib/dbUtils';
+import { revalidatePath } from 'next/cache';
+import { importRecipe } from '@/lib/dbUtils';
 import { Recipe, Ingredient, Step, Category } from '@/lib/RecipeDAO';
 import { authorize } from '@/tools/utils';
+import { recipeNameToSlug } from '@/lib/recipe-slug';
 
 export async function POST(req: NextRequest) {
     // Authorization
@@ -30,8 +32,9 @@ export async function POST(req: NextRequest) {
             typeof c === 'string' ? c.trim() : String(c?.category_name || c?.Name || c?.name || '').trim()
         )).filter((c: Category) => !!c.name);
 
+        const recipeName = raw.recipe_name || raw.name;
         const data: Recipe = new Recipe(
-            raw.recipe_name || raw.name, 
+            recipeName,
             ingredients, 
             undefined, 
             raw.recipe_description || raw.description, 
@@ -41,6 +44,10 @@ export async function POST(req: NextRequest) {
         
         try {
             await importRecipe(data);
+            const slug = recipeNameToSlug(String(recipeName || '').trim());
+            if (slug) {
+                revalidatePath(`/recipe/${slug}`);
+            }
             return NextResponse.json({ ok: true }, { status: 201 });
         } catch (err: any) {
             return NextResponse.json({ error: err.message || 'Import failed' }, { status: 500 });

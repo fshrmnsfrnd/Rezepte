@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { removeRecipe } from "@/lib/dbUtils";
+import { revalidatePath } from "next/cache";
+import { getRecipeById, removeRecipe } from "@/lib/dbUtils";
 import { authorize } from "@/tools/utils";
+import { recipeNameToSlug } from "@/lib/recipe-slug";
 
 export async function POST(req: NextRequest) {
 	// Authorization
@@ -13,15 +15,23 @@ export async function POST(req: NextRequest) {
 
 	try {
 		const body = await req.json();
-		const name = (body.recipe_name || body.name || '').toString().trim();
+		let name = (body.recipe_name || body.name || '').toString().trim();
 		const id = body.recipe_id ? Number(body.recipe_id) : undefined;
 		if (!name && !id) {
 			return NextResponse.json({ error: 'Missing recipe identifier' }, { status: 400 });
 		}
 		try {
+			if (!name && id) {
+				const existing = await getRecipeById(id);
+				name = existing?.name ?? '';
+			}
 			const res = await removeRecipe({ name, id });
 			if (!res.deleted) {
 				return NextResponse.json({ error: 'Recipe not found' }, { status: 404 });
+			}
+			const slug = recipeNameToSlug(name);
+			if (slug) {
+				revalidatePath(`/recipe/${slug}`);
 			}
 			return NextResponse.json(res, { status: 200 });
 		} catch (err) {

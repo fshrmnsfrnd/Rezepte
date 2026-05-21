@@ -101,6 +101,12 @@ export async function GET(request: NextRequest) {
 }
 ```
 
+### Datenkonzept
+In /resources liegen die Daten in diversen Formaten, ich habe mit Markdown angefangen
+Auf alle Ordner über die Daten reinkommen gibt es einen Listener, der bei Änderung die Daten in mein JSON Format umwandelt und in /resources/json speichert. 
+Auf das json Directory gibt es einen Listener, der bei Änderung die Datenbank updateted.
+Hier könnte noch erweitert werden, dass man die Möglichkeit gibt verschiedene Datenbanken zu verwenden.
+
 ### Datenbanken
 
 - **Rezepte & Zutaten:** `db.db` (SQLite)
@@ -178,7 +184,7 @@ Header-Layout: Im Querformat zwei `.showArea`-Boxen (Zutaten, Recipes); im Hochf
 
 ---
 
-## Daten & Import
+## Import
 
 __Es muss mindestens eine Zutat und der Name enthalten sein.__
 

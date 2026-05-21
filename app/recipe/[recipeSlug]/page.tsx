@@ -6,7 +6,7 @@ import { recipeNameToSlug } from "@/lib/recipe-slug";
 import RecipeDetailClient, { RecipePayload } from "./RecipeDetailClient";
 
 export const dynamic = "force-static";
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 type PageProps = {
     params: Promise<{
@@ -61,12 +61,7 @@ const CACHE_FILE = path.join(
     "recipe-static.json"
 );
 
-async function loadRecipeIndex(): Promise<Record<string, RecipePayload>> {
-    if (fs.existsSync(CACHE_FILE)) {
-        const raw = fs.readFileSync(CACHE_FILE, "utf-8");
-        return JSON.parse(raw) as Record<string, RecipePayload>;
-    }
-
+async function buildRecipeIndex(): Promise<Record<string, RecipePayload>> {
     const recipes = await getAllRecipes();
     const entries = await Promise.all(
         recipes.map(async (recipe) => {
@@ -87,6 +82,19 @@ async function loadRecipeIndex(): Promise<Record<string, RecipePayload>> {
     return index;
 }
 
+async function loadRecipeIndex(): Promise<Record<string, RecipePayload>> {
+    if (process.env.NODE_ENV !== "production") {
+        return buildRecipeIndex();
+    }
+
+    if (fs.existsSync(CACHE_FILE)) {
+        const raw = fs.readFileSync(CACHE_FILE, "utf-8");
+        return JSON.parse(raw) as Record<string, RecipePayload>;
+    }
+
+    return buildRecipeIndex();
+}
+
 export async function generateStaticParams() {
     const recipeIndex = await loadRecipeIndex();
     return Object.keys(recipeIndex).map((recipeSlug) => ({ recipeSlug }));
@@ -95,7 +103,11 @@ export async function generateStaticParams() {
 export default async function RecipePage({ params }: PageProps) {
     const { recipeSlug } = await params;
     const recipeIndex = await loadRecipeIndex();
-    const recipe = recipeIndex[recipeSlug];
+    let recipe = recipeIndex[recipeSlug];
+    if (!recipe) {
+        const refreshedIndex = await buildRecipeIndex();
+        recipe = refreshedIndex[recipeSlug];
+    }
     if (!recipe) {
         notFound();
     }

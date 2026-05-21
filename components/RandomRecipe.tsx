@@ -65,9 +65,8 @@ export default function RandomRecipe({ filterIds}: Props) {
                     const selection = getRandomRecipe();
                     if (!selection) return;
                     const slug = recipeNameToSlug(selection.name);
-                    window.location.href = slug
-                        ? `/${encodeURIComponent(slug)}`
-                        : `/recipe?recipeID=${selection.id}`;
+                    if (!slug) return;
+                    window.location.href = `/recipe/${encodeURIComponent(slug)}`;
                 }}
                 style={{margin: 12}}
             >

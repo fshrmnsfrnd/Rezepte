@@ -117,9 +117,7 @@ export default function AllRecipes({ filterIds, searchTerm }: Props) {
                     {visibleFiltered.map((element, idx) => {
                         const recipeID = element.recipe_ID ?? (idx + 1);
                         const recipeSlug = recipeNameToSlug(element.name ?? "");
-                        const targetHref = recipeSlug
-                            ? `/${encodeURIComponent(recipeSlug)}`
-                            : `/recipe?recipeID=${recipeID}`;
+                        const targetHref = recipeSlug ? `/recipe/${encodeURIComponent(recipeSlug)}` : "";
                         return (
                             <div
                                 className="recipePreview"
@@ -129,6 +127,7 @@ export default function AllRecipes({ filterIds, searchTerm }: Props) {
                                         // click intended for accordion/arrow, don't navigate
                                         return;
                                     }
+                                    if (!targetHref) return;
                                     window.location.href = targetHref;
                                 }}
                                 role="button"
